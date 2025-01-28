@@ -25,6 +25,21 @@ const AddCow = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" placeholder="Enter cow name" required />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="breed">Breed</Label>
+              <Input id="breed" placeholder="Enter breed" required />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dob">Date of Birth</Label>
+              <Input id="dob" type="date" required />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="state">State</Label>
               <Select>
                 <SelectTrigger>
@@ -37,6 +52,16 @@ const AddCow = () => {
                   <SelectItem value="milking">Milking</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sire">Sire (Father)</Label>
+              <Input id="sire" placeholder="Enter sire name" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dam">Dam (Mother)</Label>
+              <Input id="dam" placeholder="Enter dam name" />
             </div>
 
             <div className="space-y-2">

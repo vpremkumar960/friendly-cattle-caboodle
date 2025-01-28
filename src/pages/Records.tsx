@@ -1,11 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Cow } from "lucide-react";
 
 const Records = () => {
   const records = [
-    { id: "001", state: "Milking", production: "25L/day", health: "Good", lastCheckup: "2024-01-15" },
-    { id: "002", state: "Pregnant", production: "20L/day", health: "Good", lastCheckup: "2024-01-20" },
+    { name: "Lakshmi", state: "Milking", production: "25L/day", health: "Good", lastCheckup: "2024-01-15" },
+    { name: "Ganga", state: "Pregnant", production: "20L/day", health: "Good", lastCheckup: "2024-01-20" },
   ];
 
   return (
@@ -18,7 +19,8 @@ const Records = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Cow ID</TableHead>
+              <TableHead className="w-12"></TableHead>
+              <TableHead>Name</TableHead>
               <TableHead>State</TableHead>
               <TableHead>Production</TableHead>
               <TableHead>Health</TableHead>
@@ -27,8 +29,11 @@ const Records = () => {
           </TableHeader>
           <TableBody>
             {records.map((record) => (
-              <TableRow key={record.id}>
-                <TableCell>{record.id}</TableCell>
+              <TableRow key={record.name}>
+                <TableCell>
+                  <Cow className="w-6 h-6 text-gray-500" />
+                </TableCell>
+                <TableCell>{record.name}</TableCell>
                 <TableCell>{record.state}</TableCell>
                 <TableCell>{record.production}</TableCell>
                 <TableCell>{record.health}</TableCell>
