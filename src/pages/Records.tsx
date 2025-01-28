@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Cow } from "lucide-react";
+import { Beef } from "lucide-react";
 
 const Records = () => {
   const records = [
@@ -31,7 +31,7 @@ const Records = () => {
             {records.map((record) => (
               <TableRow key={record.name}>
                 <TableCell>
-                  <Cow className="w-6 h-6 text-gray-500" />
+                  <Beef className="w-6 h-6 text-gray-500" />
                 </TableCell>
                 <TableCell>{record.name}</TableCell>
                 <TableCell>{record.state}</TableCell>

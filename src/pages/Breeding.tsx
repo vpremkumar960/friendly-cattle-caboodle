@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus, Cow } from "lucide-react";
+import { Plus, Beef } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -107,7 +107,7 @@ const Breeding = () => {
             {breedingRecords.map((record, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <Cow className="w-6 h-6 text-gray-500" />
+                  <Beef className="w-6 h-6 text-gray-500" />
                 </TableCell>
                 <TableCell>{record.name}</TableCell>
                 <TableCell>{record.lastInseminationDate}</TableCell>
