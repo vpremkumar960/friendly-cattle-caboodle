@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
 import Dashboard from "./pages/Dashboard";
 import AddCow from "./pages/AddCow";
+import Production from "./pages/Production";
+import Breeding from "./pages/Breeding";
+import Records from "./pages/Records";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +25,9 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/add-cow" element={<AddCow />} />
+              <Route path="/production" element={<Production />} />
+              <Route path="/breeding" element={<Breeding />} />
+              <Route path="/records" element={<Records />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

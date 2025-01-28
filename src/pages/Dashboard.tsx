@@ -1,12 +1,19 @@
 import { Card } from "@/components/ui/card";
 import { LineChart, Beef, Droplets, Stethoscope } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Dashboard = () => {
   const stats = [
     { label: "Total Cows", value: "156", icon: Beef, change: "+12% from last month" },
-    { label: "Avg. Production", value: "28.5L", icon: Droplets, change: "+5% from last month" },
-    { label: "Health Checks", value: "23", icon: Stethoscope, change: "Due this week" },
-    { label: "Milk Production", value: "4,250L", icon: LineChart, change: "+3% from yesterday" },
+    { label: "Pregnant Cows", value: "45", icon: Stethoscope, change: "30% of total" },
+    { label: "Milking Cows", value: "78", icon: Droplets, change: "50% of total" },
+    { label: "Today's Milk", value: "1,250L", icon: LineChart, change: "+3% from yesterday" },
+  ];
+
+  const todos = [
+    { id: "sunday-bath", label: "Sunday Cow Bathing", date: "Every Sunday" },
+    { id: "deworming", label: "Deworming", date: "Every 3 months" },
+    { id: "vaccination", label: "Vaccination", date: "Tomorrow" },
   ];
 
   return (
@@ -31,33 +38,22 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-4 text-sm">
-                <div className="w-2 h-2 rounded-full bg-primary" />
-                <p className="text-gray-600">Cow #1234 completed health check</p>
-                <span className="ml-auto text-gray-400">2h ago</span>
+      <Card className="mt-8 p-6">
+        <h2 className="text-lg font-semibold mb-4">Todo List</h2>
+        <div className="space-y-4">
+          {todos.map((todo) => (
+            <div key={todo.id} className="flex items-center space-x-4">
+              <Checkbox id={todo.id} />
+              <div className="flex-1">
+                <label htmlFor={todo.id} className="text-sm font-medium cursor-pointer">
+                  {todo.label}
+                </label>
+                <p className="text-sm text-gray-500">{todo.date}</p>
               </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Upcoming Tasks</h2>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-4 text-sm">
-                <div className="w-2 h-2 rounded-full bg-yellow-400" />
-                <p className="text-gray-600">Vaccination due for Cow #5678</p>
-                <span className="ml-auto text-gray-400">Tomorrow</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 };
