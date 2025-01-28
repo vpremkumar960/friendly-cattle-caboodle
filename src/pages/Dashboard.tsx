@@ -1,9 +1,9 @@
 import { Card } from "@/components/ui/card";
-import { LineChart, Cow, Droplets, Stethoscope } from "lucide-react";
+import { LineChart, Beef, Droplets, Stethoscope } from "lucide-react";
 
 const Dashboard = () => {
   const stats = [
-    { label: "Total Cows", value: "156", icon: Cow, change: "+12% from last month" },
+    { label: "Total Cows", value: "156", icon: Beef, change: "+12% from last month" },
     { label: "Avg. Production", value: "28.5L", icon: Droplets, change: "+5% from last month" },
     { label: "Health Checks", value: "23", icon: Stethoscope, change: "Due this week" },
     { label: "Milk Production", value: "4,250L", icon: LineChart, change: "+3% from yesterday" },
