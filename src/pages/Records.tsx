@@ -14,9 +14,9 @@ import { differenceInYears, differenceInMonths } from "date-fns";
 const Records = () => {
   const [selectedCow, setSelectedCow] = useState<any>(null);
   const [records, setRecords] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    // Get cows from localStorage
     const savedCows = localStorage.getItem('cows');
     if (savedCows) {
       setRecords(JSON.parse(savedCows));
@@ -29,15 +29,28 @@ const Records = () => {
     return `${years}.${months} years`;
   };
 
-  const handleCowClick = (cow: any) => {
-    setSelectedCow(cow);
+  const getStateDisplay = (cow: any) => {
+    return cow.gender === 'male' ? 'Bull' : cow.state;
   };
+
+  const getProductionDisplay = (cow: any) => {
+    return cow.gender === 'male' ? 'N/A' : `${cow.milkingPerYear}L/year`;
+  };
+
+  const filteredRecords = records.filter((cow: any) => 
+    cow.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Cow Records</h1>
-        <Input className="max-w-xs" placeholder="Search records..." />
+        <Input 
+          className="max-w-xs" 
+          placeholder="Search records..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
       
       <Card>
@@ -47,17 +60,18 @@ const Records = () => {
               <TableHead className="w-12"></TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Age</TableHead>
+              <TableHead>Gender</TableHead>
               <TableHead>State</TableHead>
               <TableHead>Production</TableHead>
               <TableHead>Health</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {records.map((record: any) => (
+            {filteredRecords.map((record: any) => (
               <TableRow 
                 key={record.id} 
                 className="cursor-pointer hover:bg-gray-50"
-                onClick={() => handleCowClick(record)}
+                onClick={() => setSelectedCow(record)}
               >
                 <TableCell>
                   <img 
@@ -68,8 +82,9 @@ const Records = () => {
                 </TableCell>
                 <TableCell>{record.name}</TableCell>
                 <TableCell>{calculateAge(record.dob)}</TableCell>
-                <TableCell>{record.gender === 'male' ? 'Bull' : record.state}</TableCell>
-                <TableCell>{record.gender === 'male' ? 'N/A' : record.production}</TableCell>
+                <TableCell>{record.gender}</TableCell>
+                <TableCell>{getStateDisplay(record)}</TableCell>
+                <TableCell>{getProductionDisplay(record)}</TableCell>
                 <TableCell>{record.health}</TableCell>
               </TableRow>
             ))}

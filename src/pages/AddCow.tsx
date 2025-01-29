@@ -21,7 +21,7 @@ const AddCow = () => {
       breed: formData.get('breed'),
       dob: formData.get('dob'),
       gender: formData.get('gender'),
-      state: formData.get('state'),
+      state: gender === 'male' ? 'Bull' : formData.get('state'),
       sire: formData.get('sire'),
       dam: formData.get('dam'),
       milkingPerYear: gender === 'female' ? formData.get('milkingPerYear') : 'N/A',
@@ -43,6 +43,7 @@ const AddCow = () => {
     toast.success("Cow added successfully!");
     (e.target as HTMLFormElement).reset();
     setSelectedImages(null);
+    setGender("");
   };
 
   return (
@@ -72,7 +73,7 @@ const AddCow = () => {
 
             <div className="space-y-2">
               <Label htmlFor="gender">Gender</Label>
-              <Select name="gender" onValueChange={setGender}>
+              <Select name="gender" onValueChange={setGender} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
@@ -84,20 +85,33 @@ const AddCow = () => {
             </div>
 
             {gender === 'female' && (
-              <div className="space-y-2">
-                <Label htmlFor="state">State</Label>
-                <Select name="state">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="calf">Calf</SelectItem>
-                    <SelectItem value="dry">Dry</SelectItem>
-                    <SelectItem value="milking-pregnant">Milking Pregnant</SelectItem>
-                    <SelectItem value="milking">Milking</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Select name="state" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="calf">Calf</SelectItem>
+                      <SelectItem value="dry">Dry</SelectItem>
+                      <SelectItem value="milking-pregnant">Milking Pregnant</SelectItem>
+                      <SelectItem value="milking">Milking</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="milkingPerYear">Milking Per Year (Liters)</Label>
+                  <Input 
+                    id="milkingPerYear" 
+                    name="milkingPerYear" 
+                    type="number" 
+                    placeholder="Enter milking per year" 
+                    required 
+                  />
+                </div>
+              </>
             )}
 
             <div className="space-y-2">
@@ -109,19 +123,6 @@ const AddCow = () => {
               <Label htmlFor="dam">Dam (Mother)</Label>
               <Input id="dam" name="dam" placeholder="Enter dam name" />
             </div>
-
-            {gender === 'female' && (
-              <div className="space-y-2">
-                <Label htmlFor="milkingPerYear">Milking Per Year (Liters)</Label>
-                <Input 
-                  id="milkingPerYear" 
-                  name="milkingPerYear" 
-                  type="number" 
-                  placeholder="Enter milking per year" 
-                  required 
-                />
-              </div>
-            )}
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="images">Cow Images (Up to 3)</Label>
