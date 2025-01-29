@@ -1,17 +1,48 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 
 const AddCow = () => {
+  const [gender, setGender] = useState<string>("");
   const [selectedImages, setSelectedImages] = useState<FileList | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    
+    const newCow = {
+      id: uuidv4(),
+      name: formData.get('name'),
+      breed: formData.get('breed'),
+      dob: formData.get('dob'),
+      gender: formData.get('gender'),
+      state: formData.get('state'),
+      sire: formData.get('sire'),
+      dam: formData.get('dam'),
+      milkingPerYear: gender === 'female' ? formData.get('milkingPerYear') : 'N/A',
+      image: selectedImages ? URL.createObjectURL(selectedImages[0]) : null,
+      health: 'Good',
+      breedingHistory: []
+    };
+
+    // Get existing cows from localStorage
+    const existingCows = localStorage.getItem('cows');
+    const cows = existingCows ? JSON.parse(existingCows) : [];
+    
+    // Add new cow
+    cows.push(newCow);
+    
+    // Save back to localStorage
+    localStorage.setItem('cows', JSON.stringify(cows));
+    
     toast.success("Cow added successfully!");
+    (e.target as HTMLFormElement).reset();
+    setSelectedImages(null);
   };
 
   return (
@@ -26,53 +57,77 @@ const AddCow = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="Enter cow name" required />
+              <Input id="name" name="name" placeholder="Enter cow name" required />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="breed">Breed</Label>
-              <Input id="breed" placeholder="Enter breed" required />
+              <Input id="breed" name="breed" placeholder="Enter breed" required />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="dob">Date of Birth</Label>
-              <Input id="dob" type="date" required />
+              <Input id="dob" name="dob" type="date" required />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="state">State</Label>
-              <Select>
+              <Label htmlFor="gender">Gender</Label>
+              <Select name="gender" onValueChange={setGender}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select state" />
+                  <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="calf">Calf</SelectItem>
-                  <SelectItem value="dry">Dry</SelectItem>
-                  <SelectItem value="milking-pregnant">Milking Pregnant</SelectItem>
-                  <SelectItem value="milking">Milking</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
+            {gender === 'female' && (
+              <div className="space-y-2">
+                <Label htmlFor="state">State</Label>
+                <Select name="state">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="calf">Calf</SelectItem>
+                    <SelectItem value="dry">Dry</SelectItem>
+                    <SelectItem value="milking-pregnant">Milking Pregnant</SelectItem>
+                    <SelectItem value="milking">Milking</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="sire">Sire (Father)</Label>
-              <Input id="sire" placeholder="Enter sire name" />
+              <Input id="sire" name="sire" placeholder="Enter sire name" />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="dam">Dam (Mother)</Label>
-              <Input id="dam" placeholder="Enter dam name" />
+              <Input id="dam" name="dam" placeholder="Enter dam name" />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="milkingPerYear">Milking Per Year (Liters)</Label>
-              <Input id="milkingPerYear" type="number" placeholder="Enter milking per year" required />
-            </div>
+            {gender === 'female' && (
+              <div className="space-y-2">
+                <Label htmlFor="milkingPerYear">Milking Per Year (Liters)</Label>
+                <Input 
+                  id="milkingPerYear" 
+                  name="milkingPerYear" 
+                  type="number" 
+                  placeholder="Enter milking per year" 
+                  required 
+                />
+              </div>
+            )}
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="images">Cow Images (Up to 3)</Label>
               <Input 
                 id="images" 
+                name="images"
                 type="file" 
                 multiple 
                 accept="image/*"
