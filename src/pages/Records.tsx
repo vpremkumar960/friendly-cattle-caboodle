@@ -78,7 +78,7 @@ const Records = () => {
             <DialogHeader>
               <DialogTitle>{selectedCow.name}</DialogTitle>
             </DialogHeader>
-            <CowDetails cowId={selectedCow.id} />
+            <CowDetails cowId={selectedCow.id} cowData={selectedCow} />
           </DialogContent>
         </Dialog>
       )}
