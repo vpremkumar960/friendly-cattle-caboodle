@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,18 +21,27 @@ const Breeding = () => {
   const [breedingRecords, setBreedingRecords] = useState([
     { 
       id: 1,
+      cowId: "1",
       cowName: "Lakshmi",
       lastInseminationDate: "2024-01-15",
       expectedCalvingDate: "2024-10-30",
       bullSemen: "HF-123",
       status: "Pending",
-      inseminationStatus: "Success" // New field
+      inseminationStatus: "Success"
     },
   ]);
 
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [showCalvingDialog, setShowCalvingDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [existingCows, setExistingCows] = useState<any[]>([]);
+
+  useEffect(() => {
+    const savedCows = localStorage.getItem('cows');
+    if (savedCows) {
+      setExistingCows(JSON.parse(savedCows));
+    }
+  }, []);
 
   const calculateExpectedCalvingDate = (inseminationDate: string) => {
     const date = new Date(inseminationDate);
@@ -42,10 +52,13 @@ const Breeding = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const inseminationDate = formData.get("lastInseminationDate") as string;
+    const selectedCowId = formData.get("cowId") as string;
+    const selectedCow = existingCows.find(cow => cow.id === selectedCowId);
     
     const newRecord = {
       id: breedingRecords.length + 1,
-      cowName: formData.get("cowName") as string,
+      cowId: selectedCowId,
+      cowName: selectedCow?.name,
       lastInseminationDate: inseminationDate,
       expectedCalvingDate: calculateExpectedCalvingDate(inseminationDate),
       bullSemen: formData.get("bullSemen") as string,
@@ -63,7 +76,7 @@ const Breeding = () => {
     const today = new Date();
     const calvingDate = new Date(record.expectedCalvingDate);
     
-    if (today >= calvingDate && record.inseminationStatus === "Success") {
+    if (today >= calvingDate && record.inseminationStatus === "Success" && record.status !== "Completed") {
       setShowCalvingDialog(true);
     } else {
       setShowStatusDialog(true);
@@ -73,10 +86,23 @@ const Breeding = () => {
   const handleStatusUpdate = (status: string) => {
     const updatedRecords = breedingRecords.map(record => {
       if (record.id === selectedRecord.id) {
-        return {
+        const updatedRecord = {
           ...record,
           inseminationStatus: status
         };
+        
+        // If status is Success, check if calving date has passed
+        if (status === "Success") {
+          const today = new Date();
+          const calvingDate = new Date(record.expectedCalvingDate);
+          if (today >= calvingDate) {
+            setSelectedRecord(updatedRecord);
+            setShowStatusDialog(false);
+            setShowCalvingDialog(true);
+            return updatedRecord;
+          }
+        }
+        return updatedRecord;
       }
       return record;
     });
@@ -121,11 +147,23 @@ const Breeding = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Breeding Record</DialogTitle>
+              <DialogDescription>Select a cow and enter breeding details</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddRecord} className="space-y-4">
               <div>
-                <Label htmlFor="cowName">Cow Name</Label>
-                <Input id="cowName" name="cowName" required />
+                <Label htmlFor="cowId">Select Cow</Label>
+                <Select name="cowId" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select cow" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {existingCows.map((cow) => (
+                      <SelectItem key={cow.id} value={cow.id}>
+                        {cow.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="lastInseminationDate">Insemination Date</Label>
@@ -181,6 +219,7 @@ const Breeding = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Insemination Status</DialogTitle>
+            <DialogDescription>Select the new status for this breeding record</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <Select onValueChange={(value) => handleStatusUpdate(value)}>
@@ -201,6 +240,7 @@ const Breeding = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Update Calving Details</DialogTitle>
+              <DialogDescription>Enter the calving date and calf details</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCalvingUpdate} className="space-y-4">
               <div>
