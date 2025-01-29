@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, LineChart, Heart, Database, Bell, DollarSign } from "lucide-react";
+import { Home, PlusCircle, Database, LineChart, Heart, Bell, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Navigation = () => {
@@ -8,9 +8,9 @@ export const Navigation = () => {
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
     { icon: PlusCircle, label: "Add Cow", path: "/add-cow" },
+    { icon: Database, label: "Records", path: "/records" },
     { icon: LineChart, label: "Production", path: "/production" },
     { icon: Heart, label: "Breeding", path: "/breeding" },
-    { icon: Database, label: "Records", path: "/records" },
     { icon: Bell, label: "Reminders", path: "/reminders" },
     { icon: DollarSign, label: "Expenses", path: "/expenses" },
   ];

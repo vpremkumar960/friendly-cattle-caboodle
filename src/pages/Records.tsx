@@ -1,13 +1,32 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Beef } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import CowDetails from "@/components/CowDetails";
 
 const Records = () => {
-  const records = [
-    { name: "Lakshmi", state: "Milking", production: "25L/day", health: "Good", lastCheckup: "2024-01-15" },
-    { name: "Ganga", state: "Pregnant", production: "20L/day", health: "Good", lastCheckup: "2024-01-20" },
-  ];
+  const [selectedCow, setSelectedCow] = useState<any>(null);
+  const [records, setRecords] = useState([
+    { 
+      id: 1,
+      name: "Lakshmi", 
+      state: "Milking", 
+      production: "25L/day", 
+      health: "Good", 
+      lastCheckup: "2024-01-15",
+      image: "/placeholder.svg" // This should be replaced with actual cow image
+    },
+  ]);
+
+  const handleCowClick = (cow: any) => {
+    setSelectedCow(cow);
+  };
 
   return (
     <div className="p-6">
@@ -15,6 +34,7 @@ const Records = () => {
         <h1 className="text-2xl font-bold">Cow Records</h1>
         <Input className="max-w-xs" placeholder="Search records..." />
       </div>
+      
       <Card>
         <Table>
           <TableHeader>
@@ -29,9 +49,17 @@ const Records = () => {
           </TableHeader>
           <TableBody>
             {records.map((record) => (
-              <TableRow key={record.name}>
+              <TableRow 
+                key={record.id} 
+                className="cursor-pointer hover:bg-gray-50"
+                onClick={() => handleCowClick(record)}
+              >
                 <TableCell>
-                  <Beef className="w-6 h-6 text-gray-500" />
+                  <img 
+                    src={record.image} 
+                    alt={record.name} 
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
                 </TableCell>
                 <TableCell>{record.name}</TableCell>
                 <TableCell>{record.state}</TableCell>
@@ -43,6 +71,17 @@ const Records = () => {
           </TableBody>
         </Table>
       </Card>
+
+      {selectedCow && (
+        <Dialog open={!!selectedCow} onOpenChange={() => setSelectedCow(null)}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>{selectedCow.name}</DialogTitle>
+            </DialogHeader>
+            <CowDetails cowId={selectedCow.id} />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
