@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { addDays } from "date-fns";
 import { toast } from "sonner";
 
@@ -23,16 +24,18 @@ const Breeding = () => {
       lastInseminationDate: "2024-01-15",
       expectedCalvingDate: "2024-10-30",
       bullSemen: "HF-123",
-      status: "Pending"
+      status: "Pending",
+      inseminationStatus: "Success" // New field
     },
   ]);
 
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [showCalvingDialog, setShowCalvingDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
 
   const calculateExpectedCalvingDate = (inseminationDate: string) => {
     const date = new Date(inseminationDate);
-    return addDays(date, 280).toISOString().split('T')[0]; // 9 months and 2 weeks (approximately 280 days)
+    return addDays(date, 280).toISOString().split('T')[0];
   };
 
   const handleAddRecord = (e: React.FormEvent<HTMLFormElement>) => {
@@ -46,7 +49,8 @@ const Breeding = () => {
       lastInseminationDate: inseminationDate,
       expectedCalvingDate: calculateExpectedCalvingDate(inseminationDate),
       bullSemen: formData.get("bullSemen") as string,
-      status: "Pending"
+      status: "Pending",
+      inseminationStatus: "Pending"
     };
     
     setBreedingRecords([...breedingRecords, newRecord]);
@@ -59,9 +63,27 @@ const Breeding = () => {
     const today = new Date();
     const calvingDate = new Date(record.expectedCalvingDate);
     
-    if (today >= calvingDate) {
+    if (today >= calvingDate && record.inseminationStatus === "Success") {
       setShowCalvingDialog(true);
+    } else {
+      setShowStatusDialog(true);
     }
+  };
+
+  const handleStatusUpdate = (status: string) => {
+    const updatedRecords = breedingRecords.map(record => {
+      if (record.id === selectedRecord.id) {
+        return {
+          ...record,
+          inseminationStatus: status
+        };
+      }
+      return record;
+    });
+    
+    setBreedingRecords(updatedRecords);
+    setShowStatusDialog(false);
+    toast.success("Insemination status updated successfully!");
   };
 
   const handleCalvingUpdate = (e: React.FormEvent<HTMLFormElement>) => {
@@ -133,6 +155,7 @@ const Breeding = () => {
               <TableHead>Expected Calving</TableHead>
               <TableHead>Bull Semen</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Insemination Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -147,11 +170,31 @@ const Breeding = () => {
                 <TableCell>{record.expectedCalvingDate}</TableCell>
                 <TableCell>{record.bullSemen}</TableCell>
                 <TableCell>{record.status}</TableCell>
+                <TableCell>{record.inseminationStatus}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </Card>
+
+      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Insemination Status</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select onValueChange={(value) => handleStatusUpdate(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Success">Success</SelectItem>
+                <SelectItem value="Failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {showCalvingDialog && (
         <Dialog open={showCalvingDialog} onOpenChange={setShowCalvingDialog}>
@@ -166,16 +209,15 @@ const Breeding = () => {
               </div>
               <div>
                 <Label htmlFor="calfGender">Calf Gender</Label>
-                <select 
-                  id="calfGender" 
-                  name="calfGender" 
-                  className="w-full border rounded-md p-2"
-                  required
-                >
-                  <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
+                <Select name="calfGender">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button type="submit">Update</Button>
             </form>

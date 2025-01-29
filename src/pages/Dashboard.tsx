@@ -9,17 +9,20 @@ const Dashboard = () => {
       value: "156 Total", 
       icon: Beef, 
       details: [
-        "45 Pregnant (30%)",
-        "78 Milking (50%)"
+        "123 Total Cows",
+        "45 Pregnant & Milking (30%)"
       ]
     },
     { label: "Today's Milk", value: "1,250L", icon: LineChart, change: "+3% from yesterday" },
   ];
 
+  // Combine regular todos with reminders
   const todos = [
-    { id: "sunday-bath", label: "Sunday Cow Bathing", date: "Every Sunday" },
-    { id: "deworming", label: "Deworming", date: "Every 3 months" },
-    { id: "vaccination", label: "Vaccination", date: "Tomorrow" },
+    { id: "sunday-bath", label: "Sunday Cow Bathing", date: "Every Sunday", type: "regular" },
+    { id: "deworming", label: "Deworming", date: "Every 3 months", type: "regular" },
+    { id: "vaccination", label: "Vaccination", date: "Tomorrow", type: "regular" },
+    { id: "lakshmi-birthday", label: "Lakshmi's Birthday", date: "2024-02-15", type: "birthday" },
+    // Add reminders from the Reminders component state here
   ];
 
   return (
@@ -63,6 +66,9 @@ const Dashboard = () => {
                 </label>
                 <p className="text-sm text-gray-500">{todo.date}</p>
               </div>
+              {todo.type === "birthday" && (
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Birthday</span>
+              )}
             </div>
           ))}
         </div>
