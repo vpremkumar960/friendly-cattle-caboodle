@@ -1,37 +1,24 @@
-import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, Database, LineChart, Heart, Bell, DollarSign } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import UserProfile from "./UserProfile";
 
-export const Navigation = () => {
-  const location = useLocation();
-
-  const navItems = [
-    { icon: Home, label: "Dashboard", path: "/" },
-    { icon: PlusCircle, label: "Add Cow", path: "/add-cow" },
-    { icon: Database, label: "Records", path: "/records" },
-    { icon: LineChart, label: "Production", path: "/production" },
-    { icon: Heart, label: "Breeding", path: "/breeding" },
-    { icon: Bell, label: "Reminders", path: "/reminders" },
-    { icon: DollarSign, label: "Expenses", path: "/expenses" },
-  ];
-
+const Navigation = () => {
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white border-t md:relative md:border-t-0 md:border-r md:w-20 md:min-h-screen">
-      <div className="flex justify-around md:flex-col md:justify-start md:pt-8">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={cn(
-              "flex flex-col items-center p-2 text-sm text-gray-600 hover:text-primary transition-colors",
-              location.pathname === item.path && "text-primary"
-            )}
-          >
-            <item.icon className="w-6 h-6 mb-1" />
-            <span className="md:text-[10px]">{item.label}</span>
-          </Link>
-        ))}
+    <nav className="bg-white shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex">
+            <Link to="/" className="text-lg font-bold">Home</Link>
+            <Link to="/records" className="ml-4">Cow Records</Link>
+            <Link to="/breeding" className="ml-4">Breeding</Link>
+            <Link to="/logout" className="ml-4">Logout</Link>
+          </div>
+          <div className="flex items-center">
+            <UserProfile />
+          </div>
+        </div>
       </div>
     </nav>
   );
 };
+
+export default Navigation;

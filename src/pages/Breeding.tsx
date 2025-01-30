@@ -43,6 +43,7 @@ const Breeding = () => {
         .order('insemination_date', { ascending: false });
 
       if (error) throw error;
+      console.log('Breeding records:', data);
       setBreedingRecords(data || []);
     } catch (error) {
       console.error('Error fetching breeding records:', error);
@@ -59,12 +60,12 @@ const Breeding = () => {
 
       if (error) throw error;
 
+      console.log('Fetched cows:', cows);
+      setExistingCows(cows || []);
+
       if (!cows || cows.length === 0) {
         toast.error("No female cows found. Please add cows first.");
-        return;
       }
-
-      setExistingCows(cows);
     } catch (error) {
       console.error('Error fetching cows:', error);
       toast.error("Failed to fetch cows");
