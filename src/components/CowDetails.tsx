@@ -7,42 +7,92 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
   const [breedingHistory, setBreedingHistory] = useState(cowData?.breedingHistory || []);
   const [showAddBreedingDialog, setShowAddBreedingDialog] = useState(false);
-  const [milkingStatus, setMilkingStatus] = useState(cowData?.milkingStatus || 'Milking');
-  const [avgProduction, setAvgProduction] = useState(cowData?.avgProduction || '25L/day');
+  const [milkingStatus, setMilkingStatus] = useState(cowData?.state || 'Milking');
+  const [avgProduction, setAvgProduction] = useState(cowData?.milkingPerYear ? `${cowData.milkingPerYear}L/year` : '0L/year');
+  const [dewormingStatus, setDewormingStatus] = useState(cowData?.dewormingStatus || 'Not Done');
+  const [lastDewormingDate, setLastDewormingDate] = useState(cowData?.lastDewormingDate || '');
 
-  const handleAddBreedingRecord = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddBreedingRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const newRecord = {
-      inseminationDate: formData.get('inseminationDate'),
+      cow_id: cowId,
+      insemination_date: formData.get('inseminationDate'),
+      bull_semen: formData.get('bullSemen'),
       status: formData.get('status'),
-      calfBirthDate: formData.get('calfBirthDate'),
-      calfGender: formData.get('calfGender'),
-      calfName: formData.get('calfName')
+      calf_gender: formData.get('calfGender'),
     };
     
-    setBreedingHistory([...breedingHistory, newRecord]);
+    const { error } = await supabase
+      .from('breeding_records')
+      .insert(newRecord);
+
+    if (error) {
+      toast.error("Failed to add breeding record");
+      return;
+    }
+
     setShowAddBreedingDialog(false);
     toast.success("Breeding record added successfully!");
   };
 
-  const handleMilkingUpdate = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleMilkingUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    setMilkingStatus(formData.get('status') as string);
-    setAvgProduction(formData.get('production') as string);
+    const newStatus = formData.get('status') as string;
+    
+    const { error } = await supabase
+      .from('cows')
+      .update({ 
+        state: newStatus,
+        milking_per_year: parseFloat(formData.get('production') as string)
+      })
+      .eq('id', cowId);
+
+    if (error) {
+      toast.error("Failed to update milking details");
+      return;
+    }
+
+    setMilkingStatus(newStatus);
+    setAvgProduction(`${formData.get('production')}L/year`);
     toast.success("Milking details updated successfully!");
+  };
+
+  const handleDewormingUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const status = formData.get('status') as string;
+    const date = formData.get('date') as string;
+
+    const { error } = await supabase
+      .from('cows')
+      .update({ 
+        deworming_status: status,
+        last_deworming_date: date
+      })
+      .eq('id', cowId);
+
+    if (error) {
+      toast.error("Failed to update deworming status");
+      return;
+    }
+
+    setDewormingStatus(status);
+    setLastDewormingDate(date);
+    toast.success("Deworming status updated successfully!");
   };
 
   return (
     <div className="flex gap-4">
       <div className="w-1/4">
         <img 
-          src={cowData?.image || "/placeholder.svg"} 
+          src={cowData?.image_url || "/placeholder.svg"} 
           alt={cowData?.name} 
           className="w-full h-auto rounded-lg object-cover mb-4"
         />
@@ -60,11 +110,33 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
           </TabsList>
           <TabsContent value="health">
             <Card className="p-4">
-              <h3 className="font-semibold mb-2">Health Records</h3>
-              <div className="space-y-2">
-                <p>Vaccination Status: {cowData?.vaccinationStatus || 'Up to date'}</p>
-                <p>General Health: {cowData?.health || 'Good'}</p>
-              </div>
+              <form onSubmit={handleDewormingUpdate} className="space-y-4">
+                <h3 className="font-semibold mb-4">Health Records</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Deworming Status</label>
+                    <Select name="status" defaultValue={dewormingStatus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Not Done">Not Done</SelectItem>
+                        <SelectItem value="Done">Done</SelectItem>
+                        <SelectItem value="Due">Due</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Last Deworming Date</label>
+                    <Input 
+                      type="date"
+                      name="date"
+                      defaultValue={lastDewormingDate}
+                    />
+                  </div>
+                  <Button type="submit">Update Deworming Status</Button>
+                </div>
+              </form>
             </Card>
           </TabsContent>
           <TabsContent value="insemination">
@@ -91,15 +163,18 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
                       <SelectContent>
                         <SelectItem value="Milking">Milking</SelectItem>
                         <SelectItem value="Dry">Dry</SelectItem>
+                        <SelectItem value="Pregnant">Pregnant</SelectItem>
+                        <SelectItem value="Milking Pregnant">Milking Pregnant</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Average Production</label>
+                    <label className="text-sm font-medium">Production (L/year)</label>
                     <Input 
                       name="production" 
-                      defaultValue={avgProduction}
-                      placeholder="e.g., 25L/day"
+                      defaultValue={parseFloat(avgProduction)}
+                      type="number"
+                      placeholder="e.g., 3000"
                     />
                   </div>
                   <Button type="submit">Update Milking Details</Button>
@@ -126,21 +201,21 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
                         <Input type="date" name="inseminationDate" required />
                       </div>
                       <div>
+                        <label className="text-sm font-medium">Bull Semen</label>
+                        <Input name="bullSemen" required />
+                      </div>
+                      <div>
                         <label className="text-sm font-medium">Status</label>
                         <Select name="status">
                           <SelectTrigger>
                             <SelectValue placeholder="Select status" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="success">Success</SelectItem>
-                            <SelectItem value="failed">Failed</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="Success">Success</SelectItem>
+                            <SelectItem value="Failed">Failed</SelectItem>
+                            <SelectItem value="Pending">Pending</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Calf Birth Date</label>
-                        <Input type="date" name="calfBirthDate" />
                       </div>
                       <div>
                         <label className="text-sm font-medium">Calf Gender</label>
@@ -154,10 +229,6 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium">Calf Name</label>
-                        <Input name="calfName" />
-                      </div>
                       <Button type="submit">Add Record</Button>
                     </form>
                   </DialogContent>
@@ -167,20 +238,20 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Insemination Date</TableHead>
+                    <TableHead>Bull Semen</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Calf Birth Date</TableHead>
+                    <TableHead>Expected Calving</TableHead>
                     <TableHead>Calf Gender</TableHead>
-                    <TableHead>Calf Name</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {breedingHistory.map((record: any, index: number) => (
                     <TableRow key={index}>
                       <TableCell>{record.inseminationDate}</TableCell>
+                      <TableCell>{record.bullSemen}</TableCell>
                       <TableCell>{record.status}</TableCell>
-                      <TableCell>{record.calfBirthDate || '-'}</TableCell>
+                      <TableCell>{record.expectedCalvingDate || '-'}</TableCell>
                       <TableCell>{record.calfGender || '-'}</TableCell>
-                      <TableCell>{record.calfName || '-'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

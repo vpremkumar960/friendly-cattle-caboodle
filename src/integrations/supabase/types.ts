@@ -9,7 +9,171 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      breeding_records: {
+        Row: {
+          bull_semen: string | null
+          calf_gender: string | null
+          calving_date: string | null
+          cow_id: string | null
+          created_at: string
+          expected_calving_date: string | null
+          id: string
+          insemination_date: string
+          insemination_status: string | null
+          status: string | null
+        }
+        Insert: {
+          bull_semen?: string | null
+          calf_gender?: string | null
+          calving_date?: string | null
+          cow_id?: string | null
+          created_at?: string
+          expected_calving_date?: string | null
+          id?: string
+          insemination_date: string
+          insemination_status?: string | null
+          status?: string | null
+        }
+        Update: {
+          bull_semen?: string | null
+          calf_gender?: string | null
+          calving_date?: string | null
+          cow_id?: string | null
+          created_at?: string
+          expected_calving_date?: string | null
+          id?: string
+          insemination_date?: string
+          insemination_status?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "breeding_records_cow_id_fkey"
+            columns: ["cow_id"]
+            isOneToOne: false
+            referencedRelation: "cows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cows: {
+        Row: {
+          breed: string | null
+          created_at: string
+          dam: string | null
+          deworming_status: string | null
+          dob: string | null
+          gender: string | null
+          id: string
+          image_url: string | null
+          last_deworming_date: string | null
+          milking_per_year: number | null
+          name: string
+          sire: string | null
+          state: string | null
+          user_id: string | null
+        }
+        Insert: {
+          breed?: string | null
+          created_at?: string
+          dam?: string | null
+          deworming_status?: string | null
+          dob?: string | null
+          gender?: string | null
+          id?: string
+          image_url?: string | null
+          last_deworming_date?: string | null
+          milking_per_year?: number | null
+          name: string
+          sire?: string | null
+          state?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          breed?: string | null
+          created_at?: string
+          dam?: string | null
+          deworming_status?: string | null
+          dob?: string | null
+          gender?: string | null
+          id?: string
+          image_url?: string | null
+          last_deworming_date?: string | null
+          milking_per_year?: number | null
+          name?: string
+          sire?: string | null
+          state?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cows_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      reminders: {
+        Row: {
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          notification_date: string
+          notify_before: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          description?: string | null
+          id?: string
+          notification_date: string
+          notify_before: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          notification_date?: string
+          notify_before?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
