@@ -49,25 +49,39 @@ const Breeding = () => {
   };
 
   const fetchExistingCows = async () => {
-    const { data, error } = await supabase
-      .from('cows')
-      .select('*');
+    try {
+      const { data, error } = await supabase
+        .from('cows')
+        .select('*')
+        .eq('gender', 'female'); // Only fetch female cows
 
-    if (error) {
+      if (error) throw error;
+      setExistingCows(data || []);
+    } catch (error) {
+      console.error('Error fetching cows:', error);
       toast.error("Failed to fetch cows");
-      return;
     }
-
-    setExistingCows(data || []);
   };
 
   const handleAddRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const cowId = formData.get('cowId')?.toString() || '';
-    const inseminationDate = formData.get('inseminationDate')?.toString() || '';
-    const bullSemen = formData.get('bullSemen')?.toString() || '';
+    const cowId = formData.get('cowId')?.toString();
+    const inseminationDate = formData.get('inseminationDate')?.toString();
+    const bullSemen = formData.get('bullSemen')?.toString();
+
+    if (!cowId) {
+      toast.error("Please select a cow");
+      return;
+    }
+
+    // Verify the cow exists in our list
+    const cowExists = existingCows.some(cow => cow.id === cowId);
+    if (!cowExists) {
+      toast.error("Selected cow is not valid");
+      return;
+    }
     
     const newRecord = {
       cow_id: cowId,
@@ -81,6 +95,7 @@ const Breeding = () => {
       .insert(newRecord);
 
     if (error) {
+      console.error('Error adding breeding record:', error);
       toast.error("Failed to add breeding record");
       return;
     }
@@ -91,12 +106,18 @@ const Breeding = () => {
   };
 
   const handleStatusUpdate = async (status: string) => {
+    if (!selectedRecord) {
+      toast.error("No record selected");
+      return;
+    }
+
     const { error } = await supabase
       .from('breeding_records')
       .update({ status })
       .eq('id', selectedRecord.id);
 
     if (error) {
+      console.error('Error updating status:', error);
       toast.error("Failed to update status");
       return;
     }
@@ -127,6 +148,7 @@ const Breeding = () => {
       .eq('id', selectedRecord.id);
 
     if (error) {
+      console.error('Error updating calving details:', error);
       toast.error("Failed to update calving details");
       return;
     }
