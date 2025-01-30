@@ -115,11 +115,14 @@ const Breeding = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    const calvingDate = formData.get('calvingDate')?.toString() || '';
+    const calfGender = formData.get('calfGender')?.toString() || '';
+    
     const { error } = await supabase
       .from('breeding_records')
       .update({
-        calving_date: formData.get('calvingDate'),
-        calf_gender: formData.get('calfGender')
+        calving_date: calvingDate,
+        calf_gender: calfGender
       })
       .eq('id', selectedRecord.id);
 
