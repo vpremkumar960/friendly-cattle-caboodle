@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { Navigation } from "@/components/Navigation";
+import Navigation from "@/components/Navigation";
 import { Toaster } from "@/components/ui/sonner";
 import Dashboard from "@/pages/Dashboard";
 import AddCow from "@/pages/AddCow";
