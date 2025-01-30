@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
   const [breedingHistory, setBreedingHistory] = useState(cowData?.breedingHistory || []);
@@ -22,10 +23,10 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
     const formData = new FormData(e.currentTarget);
     const newRecord = {
       cow_id: cowId,
-      insemination_date: formData.get('inseminationDate'),
-      bull_semen: formData.get('bullSemen'),
-      status: formData.get('status'),
-      calf_gender: formData.get('calfGender'),
+      insemination_date: formData.get('inseminationDate')?.toString() || '',
+      bull_semen: formData.get('bullSemen')?.toString() || '',
+      status: formData.get('status')?.toString() || 'Pending',
+      calf_gender: formData.get('calfGender')?.toString() || '',
     };
     
     const { error } = await supabase
@@ -44,13 +45,14 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
   const handleMilkingUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const newStatus = formData.get('status') as string;
+    const newStatus = formData.get('status')?.toString() || '';
+    const production = formData.get('production')?.toString() || '0';
     
     const { error } = await supabase
       .from('cows')
       .update({ 
         state: newStatus,
-        milking_per_year: parseFloat(formData.get('production') as string)
+        milking_per_year: parseFloat(production)
       })
       .eq('id', cowId);
 
@@ -60,15 +62,15 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
     }
 
     setMilkingStatus(newStatus);
-    setAvgProduction(`${formData.get('production')}L/year`);
+    setAvgProduction(`${production}L/year`);
     toast.success("Milking details updated successfully!");
   };
 
   const handleDewormingUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const status = formData.get('status') as string;
-    const date = formData.get('date') as string;
+    const status = formData.get('status')?.toString() || '';
+    const date = formData.get('date')?.toString() || '';
 
     const { error } = await supabase
       .from('cows')
@@ -89,7 +91,8 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
   };
 
   return (
-    <div className="flex gap-4">
+    <TooltipProvider>
+      <div className="flex gap-4">
       <div className="w-1/4">
         <img 
           src={cowData?.image_url || "/placeholder.svg"} 
@@ -261,6 +264,8 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
         </Tabs>
       </div>
     </div>
+      </div>
+    </TooltipProvider>
   );
 };
 
