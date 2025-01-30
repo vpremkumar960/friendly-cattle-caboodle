@@ -23,6 +23,7 @@ const Breeding = () => {
   const [showCalvingDialog, setShowCalvingDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [existingCows, setExistingCows] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchBreedingRecords();
@@ -30,33 +31,40 @@ const Breeding = () => {
   }, []);
 
   const fetchBreedingRecords = async () => {
-    const { data, error } = await supabase
-      .from('breeding_records')
-      .select(`
-        *,
-        cows (
-          name
-        )
-      `)
-      .order('insemination_date', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('breeding_records')
+        .select(`
+          *,
+          cows (
+            name
+          )
+        `)
+        .order('insemination_date', { ascending: false });
 
-    if (error) {
+      if (error) throw error;
+      setBreedingRecords(data || []);
+    } catch (error) {
+      console.error('Error fetching breeding records:', error);
       toast.error("Failed to fetch breeding records");
-      return;
     }
-
-    setBreedingRecords(data || []);
   };
 
   const fetchExistingCows = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: cows, error } = await supabase
         .from('cows')
         .select('*')
-        .eq('gender', 'female'); // Only fetch female cows
+        .eq('gender', 'female');
 
       if (error) throw error;
-      setExistingCows(data || []);
+
+      if (!cows || cows.length === 0) {
+        toast.error("No female cows found. Please add cows first.");
+        return;
+      }
+
+      setExistingCows(cows);
     } catch (error) {
       console.error('Error fetching cows:', error);
       toast.error("Failed to fetch cows");
@@ -65,44 +73,48 @@ const Breeding = () => {
 
   const handleAddRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    const cowId = formData.get('cowId')?.toString();
-    const inseminationDate = formData.get('inseminationDate')?.toString();
-    const bullSemen = formData.get('bullSemen')?.toString();
+    setIsLoading(true);
 
-    if (!cowId) {
-      toast.error("Please select a cow");
-      return;
-    }
+    try {
+      const formData = new FormData(e.currentTarget);
+      const cowId = formData.get('cowId')?.toString();
+      const inseminationDate = formData.get('inseminationDate')?.toString();
+      const bullSemen = formData.get('bullSemen')?.toString();
 
-    // Verify the cow exists in our list
-    const cowExists = existingCows.some(cow => cow.id === cowId);
-    if (!cowExists) {
-      toast.error("Selected cow is not valid");
-      return;
-    }
-    
-    const newRecord = {
-      cow_id: cowId,
-      insemination_date: inseminationDate,
-      bull_semen: bullSemen,
-      status: 'Pending'
-    };
-    
-    const { error } = await supabase
-      .from('breeding_records')
-      .insert(newRecord);
+      if (!cowId || !inseminationDate) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
 
-    if (error) {
+      // Verify the cow exists in our list
+      const selectedCow = existingCows.find(cow => cow.id === cowId);
+      if (!selectedCow) {
+        toast.error("Selected cow is not valid");
+        return;
+      }
+
+      const newRecord = {
+        cow_id: cowId,
+        insemination_date: inseminationDate,
+        bull_semen: bullSemen,
+        status: 'Pending'
+      };
+
+      const { error } = await supabase
+        .from('breeding_records')
+        .insert(newRecord);
+
+      if (error) throw error;
+
+      toast.success("Breeding record added successfully!");
+      fetchBreedingRecords();
+      (e.target as HTMLFormElement).reset();
+    } catch (error) {
       console.error('Error adding breeding record:', error);
-      toast.error("Failed to add breeding record");
-      return;
+      toast.error("Failed to add breeding record. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-
-    toast.success("Breeding record added successfully!");
-    fetchBreedingRecords();
-    (e.target as HTMLFormElement).reset();
   };
 
   const handleStatusUpdate = async (status: string) => {
@@ -173,7 +185,7 @@ const Breeding = () => {
         <h1 className="text-2xl font-bold">Breeding Records</h1>
         <Dialog>
           <DialogTrigger asChild>
-            <Button>
+            <Button disabled={existingCows.length === 0}>
               <Plus className="w-4 h-4 mr-2" />
               Add Record
             </Button>
@@ -207,7 +219,9 @@ const Breeding = () => {
                 <Label htmlFor="bullSemen">Bull Semen Code</Label>
                 <Input id="bullSemen" name="bullSemen" required />
               </div>
-              <Button type="submit">Add Record</Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Adding..." : "Add Record"}
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
