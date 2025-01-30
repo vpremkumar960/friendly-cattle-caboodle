@@ -43,29 +43,52 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
 
   const handleAddBreedingRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const status = formData.get('status')?.toString() || 'Pending';
     
-    const newRecord = {
-      cow_id: cowId,
-      insemination_date: formData.get('inseminationDate')?.toString() || '',
-      bull_semen: formData.get('bullSemen')?.toString() || '',
-      status: status,
-      calf_gender: status === 'Success' ? formData.get('calfGender')?.toString() : null,
-    };
-    
-    const { error } = await supabase
-      .from('breeding_records')
-      .insert(newRecord);
+    try {
+      // First verify the cow exists
+      const { data: cowExists, error: cowCheckError } = await supabase
+        .from('cows')
+        .select('id')
+        .eq('id', cowId)
+        .single();
 
-    if (error) {
-      toast.error("Failed to add breeding record");
-      return;
+      if (cowCheckError || !cowExists) {
+        toast.error("Invalid cow selected. Please refresh and try again.");
+        return;
+      }
+
+      const formData = new FormData(e.currentTarget);
+      const status = formData.get('status')?.toString() || 'Pending';
+      
+      const newRecord = {
+        cow_id: cowId,
+        insemination_date: formData.get('inseminationDate')?.toString() || '',
+        bull_semen: formData.get('bullSemen')?.toString() || '',
+        status: status,
+        calf_gender: status === 'Success' ? formData.get('calfGender')?.toString() : null,
+      };
+      
+      const { error } = await supabase
+        .from('breeding_records')
+        .insert(newRecord);
+
+      if (error) {
+        console.error('Error adding breeding record:', error);
+        if (error.code === '23503') {
+          toast.error("Failed to add breeding record: Invalid cow selected");
+        } else {
+          toast.error("Failed to add breeding record. Please try again.");
+        }
+        return;
+      }
+
+      setShowAddBreedingDialog(false);
+      toast.success("Breeding record added successfully!");
+      fetchBreedingHistory();
+    } catch (error) {
+      console.error('Error in handleAddBreedingRecord:', error);
+      toast.error("An unexpected error occurred. Please try again.");
     }
-
-    setShowAddBreedingDialog(false);
-    toast.success("Breeding record added successfully!");
-    fetchBreedingHistory();
   };
 
   const handleImageEdit = async (e: React.FormEvent<HTMLFormElement>) => {
