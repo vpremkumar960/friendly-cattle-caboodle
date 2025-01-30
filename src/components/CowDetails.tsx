@@ -51,7 +51,6 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
       insemination_date: formData.get('inseminationDate')?.toString() || '',
       bull_semen: formData.get('bullSemen')?.toString() || '',
       status: status,
-      calf_name: status === 'Success' ? formData.get('calfName')?.toString() : null,
       calf_gender: status === 'Success' ? formData.get('calfGender')?.toString() : null,
     };
     
@@ -330,11 +329,7 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div data-calf-field>
-                          <label className="text-sm font-medium">Calf Name</label>
-                          <Input name="calfName" />
-                        </div>
-                        <div data-calf-field>
+                        <div data-calf-field style={{ display: 'none' }}>
                           <label className="text-sm font-medium">Calf Gender</label>
                           <Select name="calfGender">
                             <SelectTrigger>
@@ -358,7 +353,6 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
                       <TableHead>Bull Semen</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Expected Calving</TableHead>
-                      <TableHead>Calf Name</TableHead>
                       <TableHead>Calf Gender</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -369,7 +363,6 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
                         <TableCell>{record.bull_semen}</TableCell>
                         <TableCell>{record.status}</TableCell>
                         <TableCell>{record.expected_calving_date || '-'}</TableCell>
-                        <TableCell>{record.calf_name || '-'}</TableCell>
                         <TableCell>{record.calf_gender || '-'}</TableCell>
                       </TableRow>
                     ))}
