@@ -93,18 +93,18 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
   return (
     <TooltipProvider>
       <div className="flex gap-4">
-      <div className="w-1/4">
-        <img 
-          src={cowData?.image_url || "/placeholder.svg"} 
-          alt={cowData?.name} 
-          className="w-full h-auto rounded-lg object-cover mb-4"
-        />
-        <h2 className="text-xl font-semibold mb-2">{cowData?.name}</h2>
-        <p className="text-gray-600">ID: {cowId}</p>
-      </div>
-      
-      <div className="w-3/4">
-        <Tabs defaultValue="health" className="w-full">
+        <div className="w-1/4">
+          <img 
+            src={cowData?.image_url || "/placeholder.svg"} 
+            alt={cowData?.name} 
+            className="w-full h-auto rounded-lg object-cover mb-4"
+          />
+          <h2 className="text-xl font-semibold mb-2">{cowData?.name}</h2>
+          <p className="text-gray-600">ID: {cowId}</p>
+        </div>
+        
+        <div className="w-3/4">
+          <Tabs defaultValue="health" className="w-full">
           <TabsList>
             <TabsTrigger value="health">Health</TabsTrigger>
             <TabsTrigger value="insemination">Insemination</TabsTrigger>
@@ -261,9 +261,8 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
               </Table>
             </Card>
           </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+          </Tabs>
+        </div>
       </div>
     </TooltipProvider>
   );
