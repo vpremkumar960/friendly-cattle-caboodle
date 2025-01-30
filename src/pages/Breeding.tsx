@@ -65,7 +65,6 @@ const Breeding = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    // Explicitly convert FormDataEntryValue to string using toString()
     const cowId = formData.get('cowId')?.toString() || '';
     const inseminationDate = formData.get('inseminationDate')?.toString() || '';
     const bullSemen = formData.get('bullSemen')?.toString() || '';
