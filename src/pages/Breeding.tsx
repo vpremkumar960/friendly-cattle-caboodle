@@ -64,10 +64,16 @@ const Breeding = () => {
   const handleAddRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    
+    // Explicitly convert FormDataEntryValue to string using toString()
+    const cowId = formData.get('cowId')?.toString() || '';
+    const inseminationDate = formData.get('inseminationDate')?.toString() || '';
+    const bullSemen = formData.get('bullSemen')?.toString() || '';
+    
     const newRecord = {
-      cow_id: String(formData.get('cowId')),
-      insemination_date: String(formData.get('inseminationDate')),
-      bull_semen: String(formData.get('bullSemen')),
+      cow_id: cowId,
+      insemination_date: inseminationDate,
+      bull_semen: bullSemen,
       status: 'Pending'
     };
     
