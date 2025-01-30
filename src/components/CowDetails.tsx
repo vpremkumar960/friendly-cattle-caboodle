@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,12 +11,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
-  const [breedingHistory, setBreedingHistory] = useState(cowData?.breedingHistory || []);
+  const [breedingHistory, setBreedingHistory] = useState([]);
   const [showAddBreedingDialog, setShowAddBreedingDialog] = useState(false);
   const [milkingStatus, setMilkingStatus] = useState(cowData?.state || 'Milking');
   const [avgProduction, setAvgProduction] = useState(cowData?.milkingPerYear ? `${cowData.milkingPerYear}L/year` : '0L/year');
   const [dewormingStatus, setDewormingStatus] = useState(cowData?.dewormingStatus || 'Not Done');
   const [lastDewormingDate, setLastDewormingDate] = useState(cowData?.lastDewormingDate || '');
+
+  useEffect(() => {
+    fetchBreedingHistory();
+  }, [cowId]);
+
+  const fetchBreedingHistory = async () => {
+    const { data, error } = await supabase
+      .from('breeding_records')
+      .select('*')
+      .eq('cow_id', cowId)
+      .order('insemination_date', { ascending: false });
+
+    if (error) {
+      toast.error("Failed to fetch breeding history");
+      return;
+    }
+
+    setBreedingHistory(data || []);
+  };
 
   const handleAddBreedingRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,6 +59,7 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
 
     setShowAddBreedingDialog(false);
     toast.success("Breeding record added successfully!");
+    fetchBreedingHistory();
   };
 
   const handleMilkingUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -105,12 +125,13 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
         
         <div className="w-3/4">
           <Tabs defaultValue="health" className="w-full">
-          <TabsList>
-            <TabsTrigger value="health">Health</TabsTrigger>
-            <TabsTrigger value="insemination">Insemination</TabsTrigger>
-            <TabsTrigger value="milking">Milking</TabsTrigger>
-            <TabsTrigger value="breeding-history">Breeding History</TabsTrigger>
-          </TabsList>
+            <TabsList>
+              <TabsTrigger value="health">Health</TabsTrigger>
+              <TabsTrigger value="insemination">Insemination</TabsTrigger>
+              <TabsTrigger value="milking">Milking</TabsTrigger>
+              <TabsTrigger value="breeding-history">Breeding History</TabsTrigger>
+            </TabsList>
+            
           <TabsContent value="health">
             <Card className="p-4">
               <form onSubmit={handleDewormingUpdate} className="space-y-4">
@@ -142,16 +163,25 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
               </form>
             </Card>
           </TabsContent>
-          <TabsContent value="insemination">
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Current Insemination</h3>
-              <div className="space-y-2">
-                <p>Last Insemination: {cowData?.lastInsemination || '2024-01-15'}</p>
-                <p>Bull Semen: {cowData?.bullSemen || 'HF-123'}</p>
-                <p>Expected Calving: {cowData?.expectedCalving || '2024-10-30'}</p>
-              </div>
-            </Card>
-          </TabsContent>
+            
+            <TabsContent value="insemination">
+              <Card className="p-4">
+                <h3 className="font-semibold mb-2">Current Insemination</h3>
+                {breedingHistory.length > 0 ? (
+                  <div className="space-y-2">
+                    <p>Last Insemination: {breedingHistory[0].insemination_date}</p>
+                    <p>Bull Semen: {breedingHistory[0].bull_semen}</p>
+                    <p>Status: {breedingHistory[0].status}</p>
+                    {breedingHistory[0].status === 'Success' && (
+                      <p>Expected Calving: {breedingHistory[0].expected_calving_date}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p>No insemination records found</p>
+                )}
+              </Card>
+            </TabsContent>
+            
           <TabsContent value="milking">
             <Card className="p-4">
               <form onSubmit={handleMilkingUpdate} className="space-y-4">

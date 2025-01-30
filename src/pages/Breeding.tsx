@@ -14,123 +14,127 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { addDays } from "date-fns";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Breeding = () => {
-  const [breedingRecords, setBreedingRecords] = useState([
-    { 
-      id: 1,
-      cowId: "1",
-      cowName: "Lakshmi",
-      lastInseminationDate: "2024-01-15",
-      expectedCalvingDate: "2024-10-30",
-      bullSemen: "HF-123",
-      status: "Pending",
-      inseminationStatus: "Success"
-    },
-  ]);
-
+  const [breedingRecords, setBreedingRecords] = useState([]);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [showCalvingDialog, setShowCalvingDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [existingCows, setExistingCows] = useState<any[]>([]);
 
   useEffect(() => {
-    const savedCows = localStorage.getItem('cows');
-    if (savedCows) {
-      setExistingCows(JSON.parse(savedCows));
-    }
+    fetchBreedingRecords();
+    fetchExistingCows();
   }, []);
 
-  const calculateExpectedCalvingDate = (inseminationDate: string) => {
-    const date = new Date(inseminationDate);
-    return addDays(date, 280).toISOString().split('T')[0];
+  const fetchBreedingRecords = async () => {
+    const { data, error } = await supabase
+      .from('breeding_records')
+      .select(`
+        *,
+        cows (
+          name
+        )
+      `)
+      .order('insemination_date', { ascending: false });
+
+    if (error) {
+      toast.error("Failed to fetch breeding records");
+      return;
+    }
+
+    setBreedingRecords(data || []);
   };
 
-  const handleAddRecord = (e: React.FormEvent<HTMLFormElement>) => {
+  const fetchExistingCows = async () => {
+    const { data, error } = await supabase
+      .from('cows')
+      .select('*');
+
+    if (error) {
+      toast.error("Failed to fetch cows");
+      return;
+    }
+
+    setExistingCows(data || []);
+  };
+
+  const handleAddRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const inseminationDate = formData.get("lastInseminationDate") as string;
-    const selectedCowId = formData.get("cowId") as string;
-    const selectedCow = existingCows.find(cow => cow.id === selectedCowId);
-    
     const newRecord = {
-      id: breedingRecords.length + 1,
-      cowId: selectedCowId,
-      cowName: selectedCow?.name,
-      lastInseminationDate: inseminationDate,
-      expectedCalvingDate: calculateExpectedCalvingDate(inseminationDate),
-      bullSemen: formData.get("bullSemen") as string,
-      status: "Pending",
-      inseminationStatus: "Pending"
+      cow_id: formData.get('cowId') as string,
+      insemination_date: formData.get('inseminationDate') as string,
+      bull_semen: formData.get('bullSemen') as string,
+      status: 'Pending'
     };
     
-    setBreedingRecords([...breedingRecords, newRecord]);
+    const { error } = await supabase
+      .from('breeding_records')
+      .insert(newRecord);
+
+    if (error) {
+      toast.error("Failed to add breeding record");
+      return;
+    }
+
     toast.success("Breeding record added successfully!");
+    fetchBreedingRecords();
     (e.target as HTMLFormElement).reset();
+  };
+
+  const handleStatusUpdate = async (status: string) => {
+    const { error } = await supabase
+      .from('breeding_records')
+      .update({ status })
+      .eq('id', selectedRecord.id);
+
+    if (error) {
+      toast.error("Failed to update status");
+      return;
+    }
+
+    if (status === 'Success') {
+      setShowStatusDialog(false);
+      setShowCalvingDialog(true);
+    } else {
+      setShowStatusDialog(false);
+      fetchBreedingRecords();
+      toast.success("Status updated successfully!");
+    }
+  };
+
+  const handleCalvingUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const { error } = await supabase
+      .from('breeding_records')
+      .update({
+        calving_date: formData.get('calvingDate'),
+        calf_gender: formData.get('calfGender')
+      })
+      .eq('id', selectedRecord.id);
+
+    if (error) {
+      toast.error("Failed to update calving details");
+      return;
+    }
+
+    setShowCalvingDialog(false);
+    fetchBreedingRecords();
+    toast.success("Calving details updated successfully!");
   };
 
   const handleRecordClick = (record: any) => {
     setSelectedRecord(record);
-    const today = new Date();
-    const calvingDate = new Date(record.expectedCalvingDate);
-    
-    if (today >= calvingDate && record.inseminationStatus === "Success" && record.status !== "Completed") {
+    if (record.status === 'Success' && !record.calving_date) {
       setShowCalvingDialog(true);
     } else {
       setShowStatusDialog(true);
     }
-  };
-
-  const handleStatusUpdate = (status: string) => {
-    const updatedRecords = breedingRecords.map(record => {
-      if (record.id === selectedRecord.id) {
-        const updatedRecord = {
-          ...record,
-          inseminationStatus: status
-        };
-        
-        // If status is Success, check if calving date has passed
-        if (status === "Success") {
-          const today = new Date();
-          const calvingDate = new Date(record.expectedCalvingDate);
-          if (today >= calvingDate) {
-            setSelectedRecord(updatedRecord);
-            setShowStatusDialog(false);
-            setShowCalvingDialog(true);
-            return updatedRecord;
-          }
-        }
-        return updatedRecord;
-      }
-      return record;
-    });
-    
-    setBreedingRecords(updatedRecords);
-    setShowStatusDialog(false);
-    toast.success("Insemination status updated successfully!");
-  };
-
-  const handleCalvingUpdate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    const updatedRecords = breedingRecords.map(record => {
-      if (record.id === selectedRecord.id) {
-        return {
-          ...record,
-          calfGender: formData.get("calfGender") as string,
-          calvingDate: formData.get("calvingDate") as string,
-          status: "Completed"
-        };
-      }
-      return record;
-    });
-    
-    setBreedingRecords(updatedRecords);
-    setShowCalvingDialog(false);
-    toast.success("Calving details updated successfully!");
   };
 
   return (
@@ -166,13 +170,8 @@ const Breeding = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="lastInseminationDate">Insemination Date</Label>
-                <Input 
-                  id="lastInseminationDate" 
-                  name="lastInseminationDate" 
-                  type="date" 
-                  required 
-                />
+                <Label htmlFor="inseminationDate">Insemination Date</Label>
+                <Input type="date" id="inseminationDate" name="inseminationDate" required />
               </div>
               <div>
                 <Label htmlFor="bullSemen">Bull Semen Code</Label>
@@ -189,26 +188,28 @@ const Breeding = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Cow Name</TableHead>
-              <TableHead>Last Insemination</TableHead>
-              <TableHead>Expected Calving</TableHead>
+              <TableHead>Insemination Date</TableHead>
               <TableHead>Bull Semen</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Insemination Status</TableHead>
+              <TableHead>Expected Calving</TableHead>
+              <TableHead>Calving Date</TableHead>
+              <TableHead>Calf Gender</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {breedingRecords.map((record) => (
+            {breedingRecords.map((record: any) => (
               <TableRow 
                 key={record.id} 
                 className="cursor-pointer hover:bg-gray-50"
                 onClick={() => handleRecordClick(record)}
               >
-                <TableCell>{record.cowName}</TableCell>
-                <TableCell>{record.lastInseminationDate}</TableCell>
-                <TableCell>{record.expectedCalvingDate}</TableCell>
-                <TableCell>{record.bullSemen}</TableCell>
+                <TableCell>{record.cows?.name}</TableCell>
+                <TableCell>{record.insemination_date}</TableCell>
+                <TableCell>{record.bull_semen}</TableCell>
                 <TableCell>{record.status}</TableCell>
-                <TableCell>{record.inseminationStatus}</TableCell>
+                <TableCell>{record.expected_calving_date || '-'}</TableCell>
+                <TableCell>{record.calving_date || '-'}</TableCell>
+                <TableCell>{record.calf_gender || '-'}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -218,11 +219,11 @@ const Breeding = () => {
       <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update Insemination Status</DialogTitle>
+            <DialogTitle>Update Status</DialogTitle>
             <DialogDescription>Select the new status for this breeding record</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <Select onValueChange={(value) => handleStatusUpdate(value)}>
+            <Select onValueChange={handleStatusUpdate}>
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -235,35 +236,33 @@ const Breeding = () => {
         </DialogContent>
       </Dialog>
 
-      {showCalvingDialog && (
-        <Dialog open={showCalvingDialog} onOpenChange={setShowCalvingDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Update Calving Details</DialogTitle>
-              <DialogDescription>Enter the calving date and calf details</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCalvingUpdate} className="space-y-4">
-              <div>
-                <Label htmlFor="calvingDate">Calving Date</Label>
-                <Input id="calvingDate" name="calvingDate" type="date" required />
-              </div>
-              <div>
-                <Label htmlFor="calfGender">Calf Gender</Label>
-                <Select name="calfGender">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit">Update</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={showCalvingDialog} onOpenChange={setShowCalvingDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Calving Details</DialogTitle>
+            <DialogDescription>Enter the calving date and calf details</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCalvingUpdate} className="space-y-4">
+            <div>
+              <Label htmlFor="calvingDate">Calving Date</Label>
+              <Input type="date" id="calvingDate" name="calvingDate" required />
+            </div>
+            <div>
+              <Label htmlFor="calfGender">Calf Gender</Label>
+              <Select name="calfGender">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit">Update</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
