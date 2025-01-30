@@ -65,9 +65,9 @@ const Breeding = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const newRecord = {
-      cow_id: formData.get('cowId') as string,
-      insemination_date: formData.get('inseminationDate') as string,
-      bull_semen: formData.get('bullSemen') as string,
+      cow_id: String(formData.get('cowId')),
+      insemination_date: String(formData.get('inseminationDate')),
+      bull_semen: String(formData.get('bullSemen')),
       status: 'Pending'
     };
     
