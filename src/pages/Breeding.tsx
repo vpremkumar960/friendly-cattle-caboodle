@@ -87,7 +87,6 @@ const Breeding = () => {
         return;
       }
 
-      // Verify the cow exists in our list
       const selectedCow = existingCows.find(cow => cow.id === cowId);
       if (!selectedCow) {
         toast.error("Selected cow is not valid");
