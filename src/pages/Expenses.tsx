@@ -11,10 +11,23 @@ const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
   const [selectedExpense, setSelectedExpense] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    category: '',
+    description: '',
+    amount: '',
+    date: ''
+  });
 
   useEffect(() => {
     fetchExpenses();
   }, []);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const fetchExpenses = async () => {
     try {
@@ -46,13 +59,12 @@ const Expenses = () => {
         return;
       }
 
-      const formData = new FormData(e.currentTarget);
       const newExpense = {
-        category: formData.get("category") as string,
-        description: formData.get("description") as string,
-        amount: Number(formData.get("amount")),
-        date: formData.get("date") as string,
-        user_id: user.id, // Add the user_id here
+        category: formData.category,
+        description: formData.description,
+        amount: Number(formData.amount),
+        date: formData.date,
+        user_id: user.id,
       };
 
       const { error } = await supabase
@@ -63,7 +75,14 @@ const Expenses = () => {
 
       toast.success("Expense added successfully!");
       fetchExpenses();
-      (e.target as HTMLFormElement).reset();
+      
+      // Reset form
+      setFormData({
+        category: '',
+        description: '',
+        amount: '',
+        date: ''
+      });
     } catch (error) {
       console.error('Error adding expense:', error);
       toast.error("Failed to add expense");
@@ -80,7 +99,11 @@ const Expenses = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Category</label>
-            <Select name="category" required>
+            <Select
+              value={formData.category}
+              onValueChange={(value) => handleInputChange('category', value)}
+              required
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
@@ -94,15 +117,29 @@ const Expenses = () => {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Description</label>
-            <Input name="description" required />
+            <Input
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              required
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Amount</label>
-            <Input type="number" name="amount" required />
+            <Input
+              type="number"
+              value={formData.amount}
+              onChange={(e) => handleInputChange('amount', e.target.value)}
+              required
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Date</label>
-            <Input type="date" name="date" required />
+            <Input
+              type="date"
+              value={formData.date}
+              onChange={(e) => handleInputChange('date', e.target.value)}
+              required
+            />
           </div>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Adding..." : "Add Expense"}

@@ -17,6 +17,20 @@ interface BreedingHistoryTabProps {
 const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistoryTabProps) => {
   const [showAddBreedingDialog, setShowAddBreedingDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    inseminationDate: '',
+    bullSemen: '',
+    status: 'Pending',
+    calfGender: '',
+    calfName: ''
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const handleAddBreedingRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,30 +48,33 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
         return;
       }
 
-      const formData = new FormData(e.currentTarget);
-      const status = formData.get('status')?.toString() || 'Pending';
-      
       const newRecord = {
         cow_id: cowId,
-        insemination_date: formData.get('inseminationDate')?.toString() || '',
-        bull_semen: formData.get('bullSemen')?.toString() || '',
-        status: status,
-        calf_gender: status === 'Success' ? formData.get('calfGender')?.toString() : null,
-        calf_name: status === 'Success' ? formData.get('calfName')?.toString() : null,
+        insemination_date: formData.inseminationDate,
+        bull_semen: formData.bullSemen,
+        status: formData.status,
+        calf_gender: formData.status === 'Success' ? formData.calfGender : null,
+        calf_name: formData.status === 'Success' ? formData.calfName : null,
       };
       
       const { error } = await supabase
         .from('breeding_records')
         .insert(newRecord);
 
-      if (error) {
-        console.error('Error adding breeding record:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       setShowAddBreedingDialog(false);
       toast.success("Breeding record added successfully!");
       if (onUpdate) onUpdate();
+      
+      // Reset form
+      setFormData({
+        inseminationDate: '',
+        bullSemen: '',
+        status: 'Pending',
+        calfGender: '',
+        calfName: ''
+      });
     } catch (error) {
       console.error('Error in handleAddBreedingRecord:', error);
       toast.error("Failed to add breeding record. Please try again.");
@@ -82,23 +99,27 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
             <form onSubmit={handleAddBreedingRecord} className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Insemination Date</label>
-                <Input type="date" name="inseminationDate" required />
+                <Input 
+                  type="date" 
+                  value={formData.inseminationDate}
+                  onChange={(e) => handleInputChange('inseminationDate', e.target.value)}
+                  required 
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Bull Semen</label>
-                <Input name="bullSemen" required />
+                <Input 
+                  value={formData.bullSemen}
+                  onChange={(e) => handleInputChange('bullSemen', e.target.value)}
+                  required 
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Status</label>
-                <Select name="status" onValueChange={(value) => {
-                  const form = document.querySelector('form');
-                  if (form) {
-                    const calfFields = form.querySelectorAll('[data-calf-field]');
-                    calfFields.forEach((field: any) => {
-                      field.style.display = value === 'Success' ? 'block' : 'none';
-                    });
-                  }
-                }}>
+                <Select 
+                  value={formData.status}
+                  onValueChange={(value) => handleInputChange('status', value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -109,22 +130,33 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
                   </SelectContent>
                 </Select>
               </div>
-              <div data-calf-field style={{ display: 'none' }}>
-                <label className="text-sm font-medium">Calf Gender</label>
-                <Select name="calfGender">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div data-calf-field style={{ display: 'none' }}>
-                <label className="text-sm font-medium">Calf Name</label>
-                <Input name="calfName" placeholder="Enter calf name" />
-              </div>
+              {formData.status === 'Success' && (
+                <>
+                  <div>
+                    <label className="text-sm font-medium">Calf Gender</label>
+                    <Select
+                      value={formData.calfGender}
+                      onValueChange={(value) => handleInputChange('calfGender', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Calf Name</label>
+                    <Input
+                      value={formData.calfName}
+                      onChange={(e) => handleInputChange('calfName', e.target.value)}
+                      placeholder="Enter calf name"
+                    />
+                  </div>
+                </>
+              )}
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Adding..." : "Add Record"}
               </Button>
