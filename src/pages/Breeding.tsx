@@ -62,10 +62,6 @@ const Breeding = () => {
 
       console.log('Fetched cows:', cows);
       setExistingCows(cows || []);
-
-      if (!cows || cows.length === 0) {
-        toast.error("No female cows found. Please add cows first.");
-      }
     } catch (error) {
       console.error('Error fetching cows:', error);
       toast.error("Failed to fetch cows");
@@ -180,12 +176,12 @@ const Breeding = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Breeding Records</h1>
         <Dialog>
           <DialogTrigger asChild>
-            <Button disabled={existingCows.length === 0}>
+            <Button>
               <Plus className="w-4 h-4 mr-2" />
               Add Record
             </Button>

@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import CowDetails from "@/components/CowDetails";
 import { differenceInYears, differenceInMonths } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Records = () => {
   const [selectedCow, setSelectedCow] = useState<any>(null);
@@ -17,11 +19,28 @@ const Records = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const savedCows = localStorage.getItem('cows');
-    if (savedCows) {
-      setRecords(JSON.parse(savedCows));
-    }
+    fetchCows();
   }, []);
+
+  const fetchCows = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cows')
+        .select('*')
+        .order('name');
+      
+      if (error) {
+        toast.error("Failed to fetch cows");
+        return;
+      }
+
+      console.log('Fetched cows:', data);
+      setRecords(data || []);
+    } catch (error) {
+      console.error('Error fetching cows:', error);
+      toast.error("Failed to fetch cows");
+    }
+  };
 
   const calculateAge = (dob: string) => {
     const years = differenceInYears(new Date(), new Date(dob));
@@ -34,7 +53,7 @@ const Records = () => {
   };
 
   const getProductionDisplay = (cow: any) => {
-    return cow.gender === 'male' ? 'N/A' : `${cow.milkingPerYear}L/year`;
+    return cow.gender === 'male' ? 'N/A' : `${cow.milking_per_year}L/year`;
   };
 
   const filteredRecords = records.filter((cow: any) => 
@@ -42,8 +61,8 @@ const Records = () => {
   );
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Cow Records</h1>
         <Input 
           className="max-w-xs" 
@@ -75,17 +94,17 @@ const Records = () => {
               >
                 <TableCell>
                   <img 
-                    src={record.image || "/placeholder.svg"} 
+                    src={record.image_url || "/placeholder.svg"} 
                     alt={record.name} 
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 </TableCell>
                 <TableCell>{record.name}</TableCell>
-                <TableCell>{calculateAge(record.dob)}</TableCell>
+                <TableCell>{record.dob ? calculateAge(record.dob) : 'N/A'}</TableCell>
                 <TableCell>{record.gender}</TableCell>
                 <TableCell>{getStateDisplay(record)}</TableCell>
                 <TableCell>{getProductionDisplay(record)}</TableCell>
-                <TableCell>{record.health}</TableCell>
+                <TableCell>{record.deworming_status || 'Not Set'}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -93,12 +112,20 @@ const Records = () => {
       </Card>
 
       {selectedCow && (
-        <Dialog open={!!selectedCow} onOpenChange={() => setSelectedCow(null)}>
+        <Dialog open={!!selectedCow} onOpenChange={(open) => {
+          if (!open) {
+            setSelectedCow(null);
+          }
+        }}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>{selectedCow.name}</DialogTitle>
             </DialogHeader>
-            <CowDetails cowId={selectedCow.id} cowData={selectedCow} />
+            <CowDetails 
+              cowId={selectedCow.id} 
+              cowData={selectedCow} 
+              onUpdate={fetchCows}
+            />
           </DialogContent>
         </Dialog>
       )}

@@ -11,13 +11,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ArrowLeft, ArrowRight, Edit } from "lucide-react";
 
-const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
+const CowDetails = ({ cowId, cowData, onUpdate }: { cowId: string; cowData: any; onUpdate?: () => void }) => {
   const [breedingHistory, setBreedingHistory] = useState([]);
   const [showAddBreedingDialog, setShowAddBreedingDialog] = useState(false);
   const [milkingStatus, setMilkingStatus] = useState(cowData?.state || 'Milking');
-  const [avgProduction, setAvgProduction] = useState(cowData?.milkingPerYear ? `${cowData.milkingPerYear}L/year` : '0L/year');
-  const [dewormingStatus, setDewormingStatus] = useState(cowData?.dewormingStatus || 'Not Done');
-  const [lastDewormingDate, setLastDewormingDate] = useState(cowData?.lastDewormingDate || '');
+  const [avgProduction, setAvgProduction] = useState(cowData?.milking_per_year ? `${cowData.milking_per_year}L/year` : '0L/year');
+  const [dewormingStatus, setDewormingStatus] = useState(cowData?.deworming_status || 'Not Done');
+  const [lastDewormingDate, setLastDewormingDate] = useState(cowData?.last_deworming_date || '');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [images, setImages] = useState([cowData?.image_url || "/placeholder.svg"]);
   const [showImageEditDialog, setShowImageEditDialog] = useState(false);
@@ -45,7 +45,6 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
     e.preventDefault();
     
     try {
-      // First verify the cow exists
       const { data: cowExists, error: cowCheckError } = await supabase
         .from('cows')
         .select('id')
@@ -85,6 +84,7 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
       setShowAddBreedingDialog(false);
       toast.success("Breeding record added successfully!");
       fetchBreedingHistory();
+      if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error in handleAddBreedingRecord:', error);
       toast.error("An unexpected error occurred. Please try again.");
@@ -109,6 +109,7 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
     setImages([newImageUrl, ...images]);
     setShowImageEditDialog(false);
     toast.success("Image updated successfully!");
+    if (onUpdate) onUpdate();
   };
 
   const navigateImage = (direction: 'prev' | 'next') => {
@@ -141,6 +142,7 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
     setMilkingStatus(newStatus);
     setAvgProduction(`${production}L/year`);
     toast.success("Milking details updated successfully!");
+    if (onUpdate) onUpdate();
   };
 
   const handleDewormingUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -165,6 +167,7 @@ const CowDetails = ({ cowId, cowData }: { cowId: string; cowData: any }) => {
     setDewormingStatus(status);
     setLastDewormingDate(date);
     toast.success("Deworming status updated successfully!");
+    if (onUpdate) onUpdate();
   };
 
   return (
