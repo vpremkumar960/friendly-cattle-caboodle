@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { TablesInsert } from "@/integrations/supabase/types";
 
 const AddCow = () => {
   const [gender, setGender] = useState<string>("");
@@ -21,17 +22,7 @@ const AddCow = () => {
     try {
       const formData = new FormData(e.currentTarget as HTMLFormElement);
       
-      const newCow = {
-        name: formData.get('name'),
-        breed: formData.get('breed'),
-        dob: formData.get('dob'),
-        gender: formData.get('gender'),
-        state: gender === 'male' ? 'Bull' : formData.get('state'),
-        sire: formData.get('sire'),
-        dam: formData.get('dam'),
-        milking_per_year: gender === 'female' ? formData.get('milkingPerYear') : null,
-      };
-
+      // Get user data
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
 
@@ -43,11 +34,24 @@ const AddCow = () => {
 
       if (profileError) throw profileError;
 
-      const { data, error } = await supabase
+      // Prepare cow data with proper type conversion
+      const newCow: TablesInsert<"cows"> = {
+        name: String(formData.get('name')),
+        breed: formData.get('breed') ? String(formData.get('breed')) : null,
+        dob: formData.get('dob') ? String(formData.get('dob')) : null,
+        gender: formData.get('gender') ? String(formData.get('gender')) : null,
+        state: gender === 'male' ? 'Bull' : (formData.get('state') ? String(formData.get('state')) : null),
+        sire: formData.get('sire') ? String(formData.get('sire')) : null,
+        dam: formData.get('dam') ? String(formData.get('dam')) : null,
+        milking_per_year: gender === 'female' && formData.get('milkingPerYear') 
+          ? Number(formData.get('milkingPerYear')) 
+          : null,
+        user_id: profileData.id
+      };
+
+      const { error } = await supabase
         .from('cows')
-        .insert([{ ...newCow, user_id: profileData.id }])
-        .select()
-        .single();
+        .insert(newCow);
 
       if (error) throw error;
 
@@ -156,7 +160,9 @@ const AddCow = () => {
           </div>
 
           <div className="flex justify-end">
-            <Button type="submit">Add Cow</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Adding..." : "Add Cow"}
+            </Button>
           </div>
         </form>
       </Card>
