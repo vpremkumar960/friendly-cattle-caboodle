@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           bull_semen: string | null
           calf_gender: string | null
+          calf_name: string | null
           calving_date: string | null
           cow_id: string | null
           created_at: string
@@ -25,6 +26,7 @@ export type Database = {
         Insert: {
           bull_semen?: string | null
           calf_gender?: string | null
+          calf_name?: string | null
           calving_date?: string | null
           cow_id?: string | null
           created_at?: string
@@ -37,6 +39,7 @@ export type Database = {
         Update: {
           bull_semen?: string | null
           calf_gender?: string | null
+          calf_name?: string | null
           calving_date?: string | null
           cow_id?: string | null
           created_at?: string

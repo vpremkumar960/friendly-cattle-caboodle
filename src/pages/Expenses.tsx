@@ -18,9 +18,13 @@ const Expenses = () => {
 
   const fetchExpenses = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
 
       if (error) throw error;
@@ -36,12 +40,19 @@ const Expenses = () => {
     setIsSubmitting(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to add expenses");
+        return;
+      }
+
       const formData = new FormData(e.currentTarget);
       const newExpense = {
         category: formData.get("category") as string,
         description: formData.get("description") as string,
         amount: Number(formData.get("amount")),
         date: formData.get("date") as string,
+        user_id: user.id, // Add the user_id here
       };
 
       const { error } = await supabase
