@@ -1,30 +1,64 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState([
-    { id: 1, category: "Feed", description: "Monthly feed stock", amount: 5000, date: "2024-01-25" },
-  ]);
+  const [expenses, setExpenses] = useState([]);
   const [selectedExpense, setSelectedExpense] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setExpenses(data || []);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      toast.error("Failed to fetch expenses");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const newExpense = {
-      id: expenses.length + 1,
-      category: formData.get("category") as string,
-      description: formData.get("description") as string,
-      amount: Number(formData.get("amount")),
-      date: formData.get("date") as string,
-    };
-    setExpenses([...expenses, newExpense]);
-    toast.success("Expense added successfully!");
-    (e.target as HTMLFormElement).reset();
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const newExpense = {
+        category: formData.get("category") as string,
+        description: formData.get("description") as string,
+        amount: Number(formData.get("amount")),
+        date: formData.get("date") as string,
+      };
+
+      const { error } = await supabase
+        .from('expenses')
+        .insert(newExpense);
+
+      if (error) throw error;
+
+      toast.success("Expense added successfully!");
+      fetchExpenses();
+      (e.target as HTMLFormElement).reset();
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      toast.error("Failed to add expense");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -59,12 +93,14 @@ const Expenses = () => {
             <label className="block text-sm font-medium mb-1">Date</label>
             <Input type="date" name="date" required />
           </div>
-          <Button type="submit">Add Expense</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Adding..." : "Add Expense"}
+          </Button>
         </form>
       </Card>
 
       <div className="grid gap-4">
-        {expenses.map((expense) => (
+        {expenses.map((expense: any) => (
           <Card 
             key={expense.id} 
             className="p-4 cursor-pointer hover:bg-gray-50"

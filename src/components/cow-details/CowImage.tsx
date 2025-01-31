@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { ArrowLeft, ArrowRight, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,25 +14,57 @@ interface CowImageProps {
 const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageEditDialog, setShowImageEditDialog] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageEdit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const newImageUrl = formData.get('imageUrl')?.toString() || '';
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const { error } = await supabase
-      .from('cows')
-      .update({ image_url: newImageUrl })
-      .eq('id', cowId);
+    setIsUploading(true);
+    try {
+      // Create a storage bucket if it doesn't exist
+      const { data: bucketData, error: bucketError } = await supabase
+        .storage
+        .createBucket('cow-images', { public: true });
 
-    if (error) {
-      toast.error("Failed to update image");
-      return;
+      if (bucketError && bucketError.message !== 'Bucket already exists') {
+        throw bucketError;
+      }
+
+      // Upload the file
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${cowId}-${Date.now()}.${fileExt}`;
+      const { error: uploadError, data } = await supabase
+        .storage
+        .from('cow-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('cow-images')
+        .getPublicUrl(fileName);
+
+      // Update the cow record with the new image URL
+      const { error: updateError } = await supabase
+        .from('cows')
+        .update({ image_url: publicUrl })
+        .eq('id', cowId);
+
+      if (updateError) throw updateError;
+
+      setShowImageEditDialog(false);
+      toast.success("Image uploaded successfully!");
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error("Failed to upload image");
+    } finally {
+      setIsUploading(false);
     }
-
-    setShowImageEditDialog(false);
-    toast.success("Image updated successfully!");
-    if (onUpdate) onUpdate();
   };
 
   const navigateImage = (direction: 'prev' | 'next') => {
@@ -60,12 +91,23 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Image</DialogTitle>
+              <DialogTitle>Upload Image</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleImageEdit} className="space-y-4">
-              <Input name="imageUrl" placeholder="Enter image URL" />
-              <Button type="submit">Update Image</Button>
-            </form>
+            <div className="space-y-4">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <Button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? "Uploading..." : "Select Image"}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

@@ -14,6 +14,7 @@ const Breeding = () => {
   const [showCalvingDialog, setShowCalvingDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [existingCows, setExistingCows] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchBreedingRecords();
@@ -61,6 +62,7 @@ const Breeding = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const { error } = await supabase
         .from('breeding_records')
@@ -80,22 +82,27 @@ const Breeding = () => {
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error("Failed to update status");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleCalvingUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    setIsSubmitting(true);
     
+    const formData = new FormData(e.currentTarget);
     const calvingDate = formData.get('calvingDate')?.toString() || '';
     const calfGender = formData.get('calfGender')?.toString() || '';
+    const calfName = formData.get('calfName')?.toString() || '';
     
     try {
       const { error } = await supabase
         .from('breeding_records')
         .update({
           calving_date: calvingDate,
-          calf_gender: calfGender
+          calf_gender: calfGender,
+          calf_name: calfName
         })
         .eq('id', selectedRecord.id);
 
@@ -107,6 +114,8 @@ const Breeding = () => {
     } catch (error) {
       console.error('Error updating calving details:', error);
       toast.error("Failed to update calving details");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -175,7 +184,13 @@ const Breeding = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit">Update</Button>
+            <div>
+              <label className="text-sm font-medium">Calf Name</label>
+              <Input name="calfName" placeholder="Enter calf name" required />
+            </div>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Updating..." : "Update"}
+            </Button>
           </form>
         </DialogContent>
       </Dialog>

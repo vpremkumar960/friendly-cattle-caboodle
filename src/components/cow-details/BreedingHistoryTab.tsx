@@ -16,9 +16,11 @@ interface BreedingHistoryTabProps {
 
 const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistoryTabProps) => {
   const [showAddBreedingDialog, setShowAddBreedingDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddBreedingRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     try {
       const { data: cowExists, error: cowCheckError } = await supabase
@@ -41,6 +43,7 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
         bull_semen: formData.get('bullSemen')?.toString() || '',
         status: status,
         calf_gender: status === 'Success' ? formData.get('calfGender')?.toString() : null,
+        calf_name: status === 'Success' ? formData.get('calfName')?.toString() : null,
       };
       
       const { error } = await supabase
@@ -49,12 +52,7 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
 
       if (error) {
         console.error('Error adding breeding record:', error);
-        if (error.code === '23503') {
-          toast.error("Failed to add breeding record: Invalid cow selected");
-        } else {
-          toast.error("Failed to add breeding record. Please try again.");
-        }
-        return;
+        throw error;
       }
 
       setShowAddBreedingDialog(false);
@@ -62,7 +60,9 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error in handleAddBreedingRecord:', error);
-      toast.error("An unexpected error occurred. Please try again.");
+      toast.error("Failed to add breeding record. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -121,7 +121,13 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit">Add Record</Button>
+              <div data-calf-field style={{ display: 'none' }}>
+                <label className="text-sm font-medium">Calf Name</label>
+                <Input name="calfName" placeholder="Enter calf name" />
+              </div>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Adding..." : "Add Record"}
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -134,6 +140,7 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
             <TableHead>Status</TableHead>
             <TableHead>Expected Calving</TableHead>
             <TableHead>Calf Gender</TableHead>
+            <TableHead>Calf Name</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -144,6 +151,7 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
               <TableCell>{record.status}</TableCell>
               <TableCell>{record.expected_calving_date || '-'}</TableCell>
               <TableCell>{record.calf_gender || '-'}</TableCell>
+              <TableCell>{record.calf_name || '-'}</TableCell>
             </TableRow>
           ))}
         </TableBody>
