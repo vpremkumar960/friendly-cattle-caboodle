@@ -48,9 +48,9 @@ const App = () => {
     <Router>
       <div className="min-h-screen bg-background">
         {session ? (
-          <div className="flex h-screen overflow-hidden">
+          <div className="flex h-screen">
             <Navigation />
-            <main className="flex-1 overflow-y-auto p-4">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/add-cow" element={<AddCow />} />

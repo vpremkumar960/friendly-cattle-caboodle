@@ -1,23 +1,71 @@
-import { Link } from "react-router-dom";
-import UserProfile from "./UserProfile";
+import { Link, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { LogOut, Home, PlusCircle, FileText, LineChart, Heart, Bell, DollarSign } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Navigation = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Failed to log out");
+      return;
+    }
+    navigate("/auth");
+    toast.success("Logged out successfully");
+  };
+
+  const navItems = [
+    { path: "/", label: "Home", icon: Home },
+    { path: "/add-cow", label: "Add Cow", icon: PlusCircle },
+    { path: "/records", label: "Records", icon: FileText },
+    { path: "/production", label: "Production", icon: LineChart },
+    { path: "/breeding", label: "Breeding", icon: Heart },
+    { path: "/reminders", label: "Reminders", icon: Bell },
+    { path: "/expenses", label: "Expenses", icon: DollarSign },
+  ];
+
   return (
-    <nav className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <Link to="/" className="text-lg font-bold">Home</Link>
-            <Link to="/records" className="ml-4">Cow Records</Link>
-            <Link to="/breeding" className="ml-4">Breeding</Link>
-            <Link to="/logout" className="ml-4">Logout</Link>
-          </div>
-          <div className="flex items-center">
-            <UserProfile />
-          </div>
-        </div>
+    <div className="flex flex-col h-full border-r bg-background w-[200px] md:w-[240px]">
+      <div className="p-4 border-b">
+        <h1 className="text-xl font-bold">Farm Manager</h1>
       </div>
-    </nav>
+      <nav className="flex-1 p-4">
+        <ul className="space-y-2">
+          {navItems.map(({ path, label, icon: Icon }) => (
+            <li key={path}>
+              <Link to={path}>
+                <Button
+                  variant={location.pathname === path ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start gap-2",
+                    location.pathname === path && "bg-secondary"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Button>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div className="p-4 border-t">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
+      </div>
+    </div>
   );
 };
 
