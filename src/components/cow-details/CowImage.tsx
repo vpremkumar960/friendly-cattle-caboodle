@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, ArrowRight, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,13 +23,12 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
 
     setIsUploading(true);
     try {
-      // Create a storage bucket if it doesn't exist
-      const { data: bucketData, error: bucketError } = await supabase
-        .storage
-        .createBucket('cow-images', { public: true });
-
-      if (bucketError && bucketError.message !== 'Bucket already exists') {
-        throw bucketError;
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) {
+        toast.error("You must be logged in to upload images");
+        return;
       }
 
       // Upload the file
@@ -38,7 +37,9 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
       const { error: uploadError, data } = await supabase
         .storage
         .from('cow-images')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 
@@ -52,7 +53,8 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
       const { error: updateError } = await supabase
         .from('cows')
         .update({ image_url: publicUrl })
-        .eq('id', cowId);
+        .eq('id', cowId)
+        .eq('user_id', user.id); // Add user_id check
 
       if (updateError) throw updateError;
 
@@ -92,6 +94,9 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Upload Image</DialogTitle>
+              <DialogDescription>
+                Choose an image file to upload for this cow.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <input
