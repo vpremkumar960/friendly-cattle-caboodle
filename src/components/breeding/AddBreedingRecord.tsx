@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ interface AddBreedingRecordProps {
 
 const AddBreedingRecord = ({ existingCows, onRecordAdded }: AddBreedingRecordProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleAddRecord = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,6 +53,7 @@ const AddBreedingRecord = ({ existingCows, onRecordAdded }: AddBreedingRecordPro
 
       toast.success("Breeding record added successfully!");
       onRecordAdded();
+      setOpen(false);
       (e.target as HTMLFormElement).reset();
     } catch (error) {
       console.error('Error adding breeding record:', error);
@@ -61,8 +63,10 @@ const AddBreedingRecord = ({ existingCows, onRecordAdded }: AddBreedingRecordPro
     }
   };
 
+  const femaleCows = existingCows.filter(cow => cow.gender === 'female');
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="w-4 h-4 mr-2" />
@@ -72,7 +76,6 @@ const AddBreedingRecord = ({ existingCows, onRecordAdded }: AddBreedingRecordPro
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Breeding Record</DialogTitle>
-          <DialogDescription>Select a cow and enter breeding details</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleAddRecord} className="space-y-4">
           <div>
@@ -82,7 +85,7 @@ const AddBreedingRecord = ({ existingCows, onRecordAdded }: AddBreedingRecordPro
                 <SelectValue placeholder="Select cow" />
               </SelectTrigger>
               <SelectContent>
-                {existingCows.map((cow) => (
+                {femaleCows.map((cow) => (
                   <SelectItem key={cow.id} value={cow.id}>
                     {cow.name}
                   </SelectItem>

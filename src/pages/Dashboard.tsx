@@ -3,17 +3,55 @@ import { Card } from "@/components/ui/card";
 import { LineChart, Beef, Droplets } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { format, addDays, isBefore, isEqual } from "date-fns";
 
 const Dashboard = () => {
   const [cows, setCows] = useState<any[]>([]);
   const [showStatsDialog, setShowStatsDialog] = useState(false);
+  const [reminders, setReminders] = useState<any[]>([]);
 
   useEffect(() => {
-    const savedCows = localStorage.getItem('cows');
-    if (savedCows) {
-      setCows(JSON.parse(savedCows));
-    }
+    fetchCows();
+    fetchReminders();
   }, []);
+
+  const fetchCows = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cows')
+        .select('*');
+      
+      if (error) throw error;
+      setCows(data || []);
+    } catch (error) {
+      console.error('Error fetching cows:', error);
+    }
+  };
+
+  const fetchReminders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reminders')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+
+      // Filter reminders for the next 7 days
+      const today = new Date();
+      const filteredReminders = data.filter(reminder => {
+        const reminderDate = new Date(reminder.date);
+        const diffTime = reminderDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 7;
+      });
+
+      setReminders(filteredReminders);
+    } catch (error) {
+      console.error('Error fetching reminders:', error);
+    }
+  };
 
   const calculateStats = () => {
     const totalCows = cows.length;
@@ -54,19 +92,6 @@ const Dashboard = () => {
     },
   ];
 
-  // Filter todos to show only upcoming events
-  const today = new Date();
-  const todos = [
-    { id: "vaccination", label: "Vaccination", date: "2024-02-15", type: "regular" },
-    { id: "deworming", label: "Deworming", date: "2024-02-20", type: "regular" },
-    { id: "lakshmi-birthday", label: "Lakshmi's Birthday", date: "2024-02-15", type: "birthday" },
-  ].filter(todo => {
-    const todoDate = new Date(todo.date);
-    const diffTime = todoDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays >= 0 && diffDays <= 7; // Show only upcoming events within 7 days
-  });
-
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
@@ -103,20 +128,23 @@ const Dashboard = () => {
       <Card className="mt-8 p-6">
         <h2 className="text-lg font-semibold mb-4">Upcoming Events</h2>
         <div className="space-y-4">
-          {todos.map((todo) => (
-            <div key={todo.id} className="flex items-center space-x-4">
-              <Checkbox id={todo.id} />
+          {reminders.map((reminder) => (
+            <div key={reminder.id} className="flex items-center space-x-4">
+              <Checkbox id={reminder.id.toString()} />
               <div className="flex-1">
-                <label htmlFor={todo.id} className="text-sm font-medium cursor-pointer">
-                  {todo.label}
+                <label htmlFor={reminder.id.toString()} className="text-sm font-medium cursor-pointer">
+                  {reminder.title}
                 </label>
-                <p className="text-sm text-gray-500">{todo.date}</p>
+                <p className="text-sm text-gray-500">
+                  {format(new Date(reminder.date), 'MMM dd, yyyy')}
+                </p>
+                <p className="text-sm text-gray-500">{reminder.description}</p>
               </div>
-              {todo.type === "birthday" && (
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Birthday</span>
-              )}
             </div>
           ))}
+          {reminders.length === 0 && (
+            <p className="text-sm text-gray-500">No upcoming events</p>
+          )}
         </div>
       </Card>
 

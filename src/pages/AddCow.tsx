@@ -5,45 +5,60 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const AddCow = () => {
   const [gender, setGender] = useState<string>("");
   const [selectedImages, setSelectedImages] = useState<FileList | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
-    
-    const newCow = {
-      id: uuidv4(),
-      name: formData.get('name'),
-      breed: formData.get('breed'),
-      dob: formData.get('dob'),
-      gender: formData.get('gender'),
-      state: gender === 'male' ? 'Bull' : formData.get('state'),
-      sire: formData.get('sire'),
-      dam: formData.get('dam'),
-      milkingPerYear: gender === 'female' ? formData.get('milkingPerYear') : 'N/A',
-      image: selectedImages ? URL.createObjectURL(selectedImages[0]) : null,
-      health: 'Good',
-      breedingHistory: []
-    };
+    setIsSubmitting(true);
 
-    // Get existing cows from localStorage
-    const existingCows = localStorage.getItem('cows');
-    const cows = existingCows ? JSON.parse(existingCows) : [];
-    
-    // Add new cow
-    cows.push(newCow);
-    
-    // Save back to localStorage
-    localStorage.setItem('cows', JSON.stringify(cows));
-    
-    toast.success("Cow added successfully!");
-    (e.target as HTMLFormElement).reset();
-    setSelectedImages(null);
-    setGender("");
+    try {
+      const formData = new FormData(e.currentTarget as HTMLFormElement);
+      
+      const newCow = {
+        name: formData.get('name'),
+        breed: formData.get('breed'),
+        dob: formData.get('dob'),
+        gender: formData.get('gender'),
+        state: gender === 'male' ? 'Bull' : formData.get('state'),
+        sire: formData.get('sire'),
+        dam: formData.get('dam'),
+        milking_per_year: gender === 'female' ? formData.get('milkingPerYear') : null,
+      };
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      const { data, error } = await supabase
+        .from('cows')
+        .insert([{ ...newCow, user_id: profileData.id }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Cow added successfully!");
+      navigate('/records');
+    } catch (error) {
+      console.error('Error adding cow:', error);
+      toast.error("Failed to add cow");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
