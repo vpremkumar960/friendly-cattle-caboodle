@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,6 +30,20 @@ const Reminders = () => {
       ...prev,
       [field]: value
     }));
+
+    // Calculate notification date when date or notify_before changes
+    if (field === 'date' || field === 'notify_before') {
+      const reminderDate = new Date(value || formData.date);
+      if (reminderDate && !isNaN(reminderDate.getTime())) {
+        const days = parseInt(field === 'notify_before' ? value : formData.notify_before);
+        const notificationDate = new Date(reminderDate);
+        notificationDate.setDate(notificationDate.getDate() - days);
+        setFormData(prev => ({
+          ...prev,
+          notification_date: notificationDate.toISOString().split('T')[0]
+        }));
+      }
+    }
   };
 
   const fetchReminders = async () => {
@@ -51,8 +65,27 @@ const Reminders = () => {
     }
   };
 
+  const validateForm = () => {
+    if (!formData.date) {
+      toast.error("Please select a reminder date");
+      return false;
+    }
+    if (!formData.title) {
+      toast.error("Please enter a title");
+      return false;
+    }
+    if (formData.recurrence_type === 'Custom' && !formData.recurrence_interval) {
+      toast.error("Please enter a recurrence interval");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setIsSubmitting(true);
 
     try {
@@ -62,12 +95,16 @@ const Reminders = () => {
         return;
       }
 
+      // Format dates properly
+      const reminderDate = new Date(formData.date);
+      const notificationDate = new Date(formData.notification_date);
+
       const newReminder = {
         title: formData.title,
         description: formData.description,
-        date: formData.date,
+        date: reminderDate.toISOString().split('T')[0],
         notify_before: formData.notify_before,
-        notification_date: formData.notification_date,
+        notification_date: notificationDate.toISOString().split('T')[0],
         user_id: user.id,
         recurrence_type: formData.recurrence_type,
         recurrence_interval: formData.recurrence_type === 'Custom' ? parseInt(formData.recurrence_interval) : null
@@ -119,7 +156,6 @@ const Reminders = () => {
             <Input
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              required
             />
           </div>
           <div>
@@ -214,6 +250,7 @@ const Reminders = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reminder Details</DialogTitle>
+            <DialogDescription>View the details of your reminder.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
