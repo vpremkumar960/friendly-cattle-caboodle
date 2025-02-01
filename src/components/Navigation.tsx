@@ -1,14 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LogOut, Home, PlusCircle, FileText, LineChart, Heart, Bell, DollarSign } from "lucide-react";
+import { LogOut, Home, PlusCircle, FileText, LineChart, Heart, Bell, DollarSign, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from "react";
 
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -30,8 +33,8 @@ const Navigation = () => {
     { path: "/expenses", label: "Expenses", icon: DollarSign },
   ];
 
-  return (
-    <div className="flex flex-col h-full border-r bg-background w-[200px] md:w-[240px]">
+  const NavigationContent = () => (
+    <>
       <div className="p-4 border-b">
         <h1 className="text-xl font-bold">Farm Manager</h1>
       </div>
@@ -39,7 +42,7 @@ const Navigation = () => {
         <ul className="space-y-2">
           {navItems.map(({ path, label, icon: Icon }) => (
             <li key={path}>
-              <Link to={path}>
+              <Link to={path} onClick={() => setOpen(false)}>
                 <Button
                   variant={location.pathname === path ? "secondary" : "ghost"}
                   className={cn(
@@ -65,7 +68,31 @@ const Navigation = () => {
           Logout
         </Button>
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile Navigation */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b p-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">Farm Manager</h1>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-[240px]">
+            <NavigationContent />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Navigation */}
+      <div className="hidden md:flex flex-col h-full border-r bg-background w-[200px] md:w-[240px]">
+        <NavigationContent />
+      </div>
+    </>
   );
 };
 
