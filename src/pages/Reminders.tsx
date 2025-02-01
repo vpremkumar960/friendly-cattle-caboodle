@@ -1,24 +1,26 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const Reminders = () => {
-  const [reminders, setReminders] = useState([]);
+  const [reminders, setReminders] = useState<any[]>([]);
+  const [showDialog, setShowDialog] = useState(false);
   const [selectedReminder, setSelectedReminder] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    date: '',
-    notify_before: '1 day',
-    notification_date: '',
-    recurrence_type: 'None',
-    recurrence_interval: ''
+    title: "",
+    description: "",
+    date: "",
+    notify_before: "1",
+    notification_date: "",
+    recurrence_type: "None",
+    recurrence_interval: ""
   });
 
   useEffect(() => {
@@ -31,7 +33,6 @@ const Reminders = () => {
       [field]: value
     }));
 
-    // Calculate notification date when date or notify_before changes
     if (field === 'date' || field === 'notify_before') {
       const reminderDate = new Date(value || formData.date);
       if (reminderDate && !isNaN(reminderDate.getTime())) {
@@ -55,7 +56,7 @@ const Reminders = () => {
         .from('reminders')
         .select('*')
         .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .order('date', { ascending: true });
 
       if (error) throw error;
       setReminders(data || []);
@@ -91,11 +92,10 @@ const Reminders = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("You must be logged in to add reminders");
+        toast.error("You must be logged in to create reminders");
         return;
       }
 
-      // Format dates properly
       const reminderDate = new Date(formData.date);
       const notificationDate = new Date(formData.notification_date);
 
@@ -112,141 +112,197 @@ const Reminders = () => {
 
       const { error } = await supabase
         .from('reminders')
-        .insert(newReminder);
+        .insert([newReminder]);
 
       if (error) throw error;
 
-      toast.success("Reminder added successfully!");
-      fetchReminders();
-      
-      // Reset form
+      toast.success("Reminder created successfully");
       setFormData({
-        title: '',
-        description: '',
-        date: '',
-        notify_before: '1 day',
-        notification_date: '',
-        recurrence_type: 'None',
-        recurrence_interval: ''
+        title: "",
+        description: "",
+        date: "",
+        notify_before: "1",
+        notification_date: "",
+        recurrence_type: "None",
+        recurrence_interval: ""
       });
+      fetchReminders();
     } catch (error) {
-      console.error('Error adding reminder:', error);
-      toast.error("Failed to add reminder");
+      console.error('Error creating reminder:', error);
+      toast.error("Failed to create reminder");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleDelete = async (reminderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('reminders')
+        .delete()
+        .eq('id', reminderId);
+
+      if (error) throw error;
+      toast.success("Reminder deleted successfully");
+      fetchReminders();
+    } catch (error) {
+      console.error('Error deleting reminder:', error);
+      toast.error("Failed to delete reminder");
+    }
+  };
+
+  const isActiveReminder = (reminder: any) => {
+    const today = new Date();
+    const reminderDate = new Date(reminder.date);
+    return reminderDate >= today;
+  };
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Reminders</h1>
-      
-      <Card className="p-6 mb-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <Input
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <Input
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Date</label>
-            <Input
-              type="date"
-              value={formData.date}
-              onChange={(e) => handleInputChange('date', e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Notify Before</label>
-            <Select
-              value={formData.notify_before}
-              onValueChange={(value) => handleInputChange('notify_before', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select notification time" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1 day">1 Day Before</SelectItem>
-                <SelectItem value="2 days">2 Days Before</SelectItem>
-                <SelectItem value="3 days">3 Days Before</SelectItem>
-                <SelectItem value="1 week">1 Week Before</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Recurrence</label>
-            <Select
-              value={formData.recurrence_type}
-              onValueChange={(value) => handleInputChange('recurrence_type', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select recurrence type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="None">None (One-time)</SelectItem>
-                <SelectItem value="Daily">Daily</SelectItem>
-                <SelectItem value="Weekly">Weekly</SelectItem>
-                <SelectItem value="Monthly">Monthly</SelectItem>
-                <SelectItem value="Custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {formData.recurrence_type === 'Custom' && (
-            <div>
-              <label className="block text-sm font-medium mb-1">Recurrence Interval (days)</label>
-              <Input
-                type="number"
-                min="1"
-                value={formData.recurrence_interval}
-                onChange={(e) => handleInputChange('recurrence_interval', e.target.value)}
-                required
-              />
-            </div>
-          )}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Adding..." : "Add Reminder"}
-          </Button>
-        </form>
-      </Card>
-
-      <div className="grid gap-4">
-        {reminders.map((reminder: any) => (
-          <Card 
-            key={reminder.id} 
-            className="p-4 cursor-pointer hover:bg-gray-50"
-            onClick={() => setSelectedReminder(reminder)}
+      <form onSubmit={handleSubmit} className="space-y-4 mb-8">
+        <div>
+          <label className="block text-sm font-medium mb-1">Title</label>
+          <Input
+            value={formData.title}
+            onChange={(e) => handleInputChange('title', e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Description</label>
+          <Input
+            value={formData.description}
+            onChange={(e) => handleInputChange('description', e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Date</label>
+          <Input
+            type="date"
+            value={formData.date}
+            onChange={(e) => handleInputChange('date', e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Notify Before (days)</label>
+          <Input
+            type="number"
+            value={formData.notify_before}
+            onChange={(e) => handleInputChange('notify_before', e.target.value)}
+            required
+            min="1"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Recurrence</label>
+          <Select
+            value={formData.recurrence_type}
+            onValueChange={(value) => handleInputChange('recurrence_type', value)}
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold">{reminder.title}</h3>
-                <p className="text-sm text-gray-600 mt-1">{reminder.description}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Date: {reminder.date} | Notify: {reminder.notify_before} before
-                </p>
-                {reminder.recurrence_type !== 'None' && (
-                  <p className="text-sm text-gray-500">
-                    Recurrence: {reminder.recurrence_type}
-                    {reminder.recurrence_type === 'Custom' && ` (${reminder.recurrence_interval} days)`}
-                  </p>
-                )}
-              </div>
-            </div>
-          </Card>
-        ))}
+            <SelectTrigger>
+              <SelectValue placeholder="Select recurrence type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="None">None</SelectItem>
+              <SelectItem value="Daily">Daily</SelectItem>
+              <SelectItem value="Weekly">Weekly</SelectItem>
+              <SelectItem value="Monthly">Monthly</SelectItem>
+              <SelectItem value="Custom">Custom</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {formData.recurrence_type === 'Custom' && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Recurrence Interval (days)</label>
+            <Input
+              type="number"
+              value={formData.recurrence_interval}
+              onChange={(e) => handleInputChange('recurrence_interval', e.target.value)}
+              min="1"
+            />
+          </div>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Creating..." : "Create Reminder"}
+        </Button>
+      </form>
+
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Active Reminders</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Recurrence</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reminders
+                .filter(isActiveReminder)
+                .map((reminder) => (
+                  <TableRow key={reminder.id}>
+                    <TableCell>{reminder.title}</TableCell>
+                    <TableCell>{reminder.description}</TableCell>
+                    <TableCell>{new Date(reminder.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{reminder.recurrence_type}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(reminder.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Completed Reminders</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Recurrence</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reminders
+                .filter(reminder => !isActiveReminder(reminder))
+                .map((reminder) => (
+                  <TableRow key={reminder.id}>
+                    <TableCell>{reminder.title}</TableCell>
+                    <TableCell>{reminder.description}</TableCell>
+                    <TableCell>{new Date(reminder.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{reminder.recurrence_type}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(reminder.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      <Dialog open={!!selectedReminder} onOpenChange={() => setSelectedReminder(null)}>
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reminder Details</DialogTitle>
@@ -266,17 +322,8 @@ const Reminders = () => {
               <p>{selectedReminder?.date}</p>
             </div>
             <div>
-              <label className="font-medium">Notify Before</label>
-              <p>{selectedReminder?.notify_before}</p>
-            </div>
-            <div>
-              <label className="font-medium">Recurrence</label>
-              <p>
-                {selectedReminder?.recurrence_type}
-                {selectedReminder?.recurrence_type === 'Custom' && 
-                  ` (${selectedReminder?.recurrence_interval} days)`
-                }
-              </p>
+              <label className="font-medium">Notification Date</label>
+              <p>{selectedReminder?.notification_date}</p>
             </div>
           </div>
         </DialogContent>
