@@ -19,6 +19,7 @@ const BreedingTable = ({ breedingRecords, onRecordClick }: BreedingTableProps) =
             <TableHead>Expected Calving</TableHead>
             <TableHead>Calving Date</TableHead>
             <TableHead>Calf Gender</TableHead>
+            <TableHead>Calf Name</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -35,6 +36,7 @@ const BreedingTable = ({ breedingRecords, onRecordClick }: BreedingTableProps) =
               <TableCell>{record.expected_calving_date || '-'}</TableCell>
               <TableCell>{record.calving_date || '-'}</TableCell>
               <TableCell>{record.calf_gender || '-'}</TableCell>
+              <TableCell>{record.calf_name || '-'}</TableCell>
             </TableRow>
           ))}
         </TableBody>

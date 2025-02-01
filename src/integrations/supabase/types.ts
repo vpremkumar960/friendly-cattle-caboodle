@@ -211,6 +211,8 @@ export type Database = {
           id: string
           notification_date: string
           notify_before: string
+          recurrence_interval: number | null
+          recurrence_type: string | null
           title: string
           user_id: string | null
         }
@@ -221,6 +223,8 @@ export type Database = {
           id?: string
           notification_date: string
           notify_before: string
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           title: string
           user_id?: string | null
         }
@@ -231,6 +235,8 @@ export type Database = {
           id?: string
           notification_date?: string
           notify_before?: string
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           title?: string
           user_id?: string | null
         }

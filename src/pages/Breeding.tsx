@@ -71,14 +71,12 @@ const Breeding = () => {
 
       if (error) throw error;
 
+      setShowStatusDialog(false);
       if (status === 'Success') {
-        setShowStatusDialog(false);
         setShowCalvingDialog(true);
-      } else {
-        setShowStatusDialog(false);
-        fetchBreedingRecords();
-        toast.success("Status updated successfully!");
       }
+      fetchBreedingRecords();
+      toast.success("Status updated successfully!");
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error("Failed to update status");
@@ -109,6 +107,7 @@ const Breeding = () => {
       if (error) throw error;
 
       setShowCalvingDialog(false);
+      setSelectedRecord(null);
       fetchBreedingRecords();
       toast.success("Calving details updated successfully!");
     } catch (error) {
