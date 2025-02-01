@@ -84,13 +84,13 @@ const Reminders = () => {
     try {
       const { error } = await supabase
         .from('reminders')
-        .insert({
-          title: formData.get("title"),
-          description: formData.get("description"),
+        .insert([{  // Changed to array with single object
+          title: formData.get("title") as string,
+          description: formData.get("description") as string,
           date,
           notify_before: notifyBefore,
           notification_date: notificationDate
-        });
+        }]);
 
       if (error) throw error;
 
