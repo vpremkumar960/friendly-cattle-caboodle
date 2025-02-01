@@ -4,48 +4,50 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { addDays, isBefore, isEqual } from "date-fns";
 
 const Reminders = () => {
-  const [reminders, setReminders] = useState(() => {
-    const saved = localStorage.getItem('reminders');
-    return saved ? JSON.parse(saved) : [
-      { 
-        id: 1, 
-        title: "Vaccination", 
-        description: "Annual vaccination for all cows", 
-        date: "2024-02-01",
-        notifyBefore: "1_day",
-        notificationDate: "2024-01-31"
-      },
-    ];
-  });
+  const [activeReminders, setActiveReminders] = useState<any[]>([]);
+  const [completedReminders, setCompletedReminders] = useState<any[]>([]);
 
   useEffect(() => {
-    localStorage.setItem('reminders', JSON.stringify(reminders));
-  }, [reminders]);
+    fetchReminders();
+  }, []);
 
-  useEffect(() => {
-    const checkReminders = () => {
+  const fetchReminders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reminders')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      reminders.forEach(reminder => {
-        const notificationDate = new Date(reminder.notificationDate);
-        notificationDate.setHours(0, 0, 0, 0);
-
-        if (isEqual(today, notificationDate)) {
-          toast.info(`Reminder: ${reminder.title} is due ${reminder.notifyBefore === "1_day" ? "tomorrow" : "soon"}!`);
-        }
+      const active = data.filter(reminder => {
+        const reminderDate = new Date(reminder.date);
+        reminderDate.setHours(0, 0, 0, 0);
+        return !isBefore(reminderDate, today);
       });
-    };
 
-    checkReminders();
-    const interval = setInterval(checkReminders, 1000 * 60 * 60); // Check every hour
+      const completed = data.filter(reminder => {
+        const reminderDate = new Date(reminder.date);
+        reminderDate.setHours(0, 0, 0, 0);
+        return isBefore(reminderDate, today);
+      });
 
-    return () => clearInterval(interval);
-  }, [reminders]);
+      setActiveReminders(active);
+      setCompletedReminders(completed);
+    } catch (error) {
+      console.error('Error fetching reminders:', error);
+      toast.error("Failed to fetch reminders");
+    }
+  };
 
   const calculateNotificationDate = (date: string, notifyBefore: string) => {
     const eventDate = new Date(date);
@@ -63,7 +65,7 @@ const Reminders = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const date = formData.get("date") as string;
@@ -79,18 +81,26 @@ const Reminders = () => {
       return;
     }
 
-    const newReminder = {
-      id: reminders.length + 1,
-      title: formData.get("title") as string,
-      description: formData.get("description") as string,
-      date,
-      notifyBefore,
-      notificationDate
-    };
-    
-    setReminders([...reminders, newReminder]);
-    toast.success("Reminder added successfully!");
-    (e.target as HTMLFormElement).reset();
+    try {
+      const { error } = await supabase
+        .from('reminders')
+        .insert({
+          title: formData.get("title"),
+          description: formData.get("description"),
+          date,
+          notify_before: notifyBefore,
+          notification_date: notificationDate
+        });
+
+      if (error) throw error;
+
+      toast.success("Reminder added successfully!");
+      fetchReminders();
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error('Error adding reminder:', error);
+      toast.error("Failed to add reminder");
+    }
   };
 
   return (
@@ -129,17 +139,47 @@ const Reminders = () => {
         </form>
       </Card>
 
-      <div className="grid gap-4">
-        {reminders.map((reminder) => (
-          <Card key={reminder.id} className="p-4">
-            <h3 className="font-semibold">{reminder.title}</h3>
-            <p className="text-sm text-gray-600 mt-1">{reminder.description}</p>
-            <p className="text-sm text-gray-500 mt-2">Date: {reminder.date}</p>
-            <p className="text-sm text-gray-500">Notify: {reminder.notifyBefore.replace('_', ' ')}</p>
-            <p className="text-sm text-gray-500">Notification Date: {reminder.notificationDate}</p>
+      <Tabs defaultValue="active" className="w-full">
+        <TabsList>
+          <TabsTrigger value="active">Active Reminders</TabsTrigger>
+          <TabsTrigger value="completed">Completed Reminders</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="active">
+          <Card className="p-4">
+            <div className="space-y-4">
+              {activeReminders.map((reminder) => (
+                <Card key={reminder.id} className="p-4">
+                  <h3 className="font-semibold">{reminder.title}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{reminder.description}</p>
+                  <p className="text-sm text-gray-500 mt-2">Date: {reminder.date}</p>
+                  <p className="text-sm text-gray-500">Notify: {reminder.notify_before.replace('_', ' ')}</p>
+                </Card>
+              ))}
+              {activeReminders.length === 0 && (
+                <p className="text-sm text-gray-500">No active reminders</p>
+              )}
+            </div>
           </Card>
-        ))}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="completed">
+          <Card className="p-4">
+            <div className="space-y-4">
+              {completedReminders.map((reminder) => (
+                <Card key={reminder.id} className="p-4">
+                  <h3 className="font-semibold">{reminder.title}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{reminder.description}</p>
+                  <p className="text-sm text-gray-500 mt-2">Date: {reminder.date}</p>
+                </Card>
+              ))}
+              {completedReminders.length === 0 && (
+                <p className="text-sm text-gray-500">No completed reminders</p>
+              )}
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

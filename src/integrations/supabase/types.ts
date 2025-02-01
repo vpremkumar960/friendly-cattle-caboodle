@@ -118,6 +118,35 @@ export type Database = {
           },
         ]
       }
+      deworming_history: {
+        Row: {
+          cow_id: string | null
+          created_at: string
+          deworming_date: string
+          id: string
+        }
+        Insert: {
+          cow_id?: string | null
+          created_at?: string
+          deworming_date: string
+          id?: string
+        }
+        Update: {
+          cow_id?: string | null
+          created_at?: string
+          deworming_date?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deworming_history_cow_id_fkey"
+            columns: ["cow_id"]
+            isOneToOne: false
+            referencedRelation: "cows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number

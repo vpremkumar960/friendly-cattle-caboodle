@@ -34,7 +34,6 @@ const Records = () => {
         return;
       }
 
-      console.log('Fetched cows:', data);
       setRecords(data || []);
     } catch (error) {
       console.error('Error fetching cows:', error);
@@ -62,21 +61,21 @@ const Records = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold">Cow Records</h1>
         <Input 
-          className="max-w-xs" 
+          className="w-full md:w-64" 
           placeholder="Search records..." 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
       
-      <Card>
+      <Card className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12"></TableHead>
+              <TableHead className="w-20 md:w-24"></TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Age</TableHead>
               <TableHead>Gender</TableHead>
@@ -93,13 +92,15 @@ const Records = () => {
                 onClick={() => setSelectedCow(record)}
               >
                 <TableCell>
-                  <img 
-                    src={record.image_url || "/placeholder.svg"} 
-                    alt={record.name} 
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
+                  <div className="w-16 h-16 md:w-20 md:h-20 relative">
+                    <img 
+                      src={record.image_url || "/placeholder.svg"} 
+                      alt={record.name} 
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  </div>
                 </TableCell>
-                <TableCell>{record.name}</TableCell>
+                <TableCell className="font-medium">{record.name}</TableCell>
                 <TableCell>{record.dob ? calculateAge(record.dob) : 'N/A'}</TableCell>
                 <TableCell>{record.gender}</TableCell>
                 <TableCell>{getStateDisplay(record)}</TableCell>
@@ -112,12 +113,15 @@ const Records = () => {
       </Card>
 
       {selectedCow && (
-        <Dialog open={!!selectedCow} onOpenChange={(open) => {
-          if (!open) {
-            setSelectedCow(null);
-          }
-        }}>
-          <DialogContent className="max-w-3xl">
+        <Dialog 
+          open={!!selectedCow} 
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedCow(null);
+            }
+          }}
+        >
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{selectedCow.name}</DialogTitle>
             </DialogHeader>

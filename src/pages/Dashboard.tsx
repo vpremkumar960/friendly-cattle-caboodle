@@ -2,19 +2,27 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { LineChart, Beef, Droplets } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { format, addDays, isBefore, isEqual } from "date-fns";
+import { format, addDays, isBefore, isEqual, differenceInDays } from "date-fns";
 
 const Dashboard = () => {
   const [cows, setCows] = useState<any[]>([]);
   const [showStatsDialog, setShowStatsDialog] = useState(false);
   const [reminders, setReminders] = useState<any[]>([]);
+  const [activeReminders, setActiveReminders] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCows();
     fetchReminders();
   }, []);
+
+  useEffect(() => {
+    if (cows.length > 0) {
+      checkDewormingDates();
+    }
+  }, [cows]);
 
   const fetchCows = async () => {
     try {
@@ -29,6 +37,30 @@ const Dashboard = () => {
     }
   };
 
+  const checkDewormingDates = () => {
+    const today = new Date();
+    const events: any[] = [];
+
+    cows.forEach(cow => {
+      if (cow.last_deworming_date) {
+        const lastDeworming = new Date(cow.last_deworming_date);
+        const nextDeworming = addDays(lastDeworming, 90); // 3 months
+        const daysUntilNext = differenceInDays(nextDeworming, today);
+
+        if (daysUntilNext <= 10 && daysUntilNext > 0) {
+          events.push({
+            title: `Deworming due for ${cow.name}`,
+            description: `Due in ${daysUntilNext} days`,
+            date: format(nextDeworming, 'yyyy-MM-dd'),
+            type: 'deworming'
+          });
+        }
+      }
+    });
+
+    setUpcomingEvents(prev => [...prev, ...events]);
+  };
+
   const fetchReminders = async () => {
     try {
       const { data, error } = await supabase
@@ -38,16 +70,24 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      // Filter reminders for the next 7 days
       const today = new Date();
-      const filteredReminders = data.filter(reminder => {
+      today.setHours(0, 0, 0, 0);
+
+      const active = data.filter(reminder => {
         const reminderDate = new Date(reminder.date);
-        const diffTime = reminderDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays >= 0 && diffDays <= 7;
+        reminderDate.setHours(0, 0, 0, 0);
+        return !isBefore(reminderDate, today);
       });
 
-      setReminders(filteredReminders);
+      const upcoming = active.filter(reminder => {
+        const notificationDate = new Date(reminder.notification_date);
+        notificationDate.setHours(0, 0, 0, 0);
+        const reminderDate = new Date(reminder.date);
+        return !isBefore(notificationDate, today) && !isEqual(reminderDate, today);
+      });
+
+      setActiveReminders(active);
+      setUpcomingEvents(prev => [...prev, ...upcoming]);
     } catch (error) {
       console.error('Error fetching reminders:', error);
     }
@@ -128,21 +168,21 @@ const Dashboard = () => {
       <Card className="mt-8 p-6">
         <h2 className="text-lg font-semibold mb-4">Upcoming Events</h2>
         <div className="space-y-4">
-          {reminders.map((reminder) => (
-            <div key={reminder.id} className="flex items-center space-x-4">
-              <Checkbox id={reminder.id.toString()} />
+          {upcomingEvents.map((event, index) => (
+            <div key={index} className="flex items-center space-x-4">
+              <Checkbox id={`event-${index}`} />
               <div className="flex-1">
-                <label htmlFor={reminder.id.toString()} className="text-sm font-medium cursor-pointer">
-                  {reminder.title}
+                <label htmlFor={`event-${index}`} className="text-sm font-medium cursor-pointer">
+                  {event.title}
                 </label>
                 <p className="text-sm text-gray-500">
-                  {format(new Date(reminder.date), 'MMM dd, yyyy')}
+                  {format(new Date(event.date), 'MMM dd, yyyy')}
                 </p>
-                <p className="text-sm text-gray-500">{reminder.description}</p>
+                <p className="text-sm text-gray-500">{event.description}</p>
               </div>
             </div>
           ))}
-          {reminders.length === 0 && (
+          {upcomingEvents.length === 0 && (
             <p className="text-sm text-gray-500">No upcoming events</p>
           )}
         </div>
