@@ -1,22 +1,14 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import CowDetails from "@/components/CowDetails";
-import { differenceInYears, differenceInMonths } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Records = () => {
-  const [selectedCow, setSelectedCow] = useState<any>(null);
-  const [records, setRecords] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [cows, setCows] = useState<any[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCows();
@@ -24,115 +16,69 @@ const Records = () => {
 
   const fetchCows = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('cows')
         .select('*')
-        .order('name');
-      
-      if (error) {
-        toast.error("Failed to fetch cows");
-        return;
-      }
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      setRecords(data || []);
+      if (error) throw error;
+      setCows(data || []);
     } catch (error) {
       console.error('Error fetching cows:', error);
-      toast.error("Failed to fetch cows");
+      toast.error("Failed to fetch cow records");
     }
   };
 
-  const calculateAge = (dob: string) => {
-    const years = differenceInYears(new Date(), new Date(dob));
-    const months = differenceInMonths(new Date(), new Date(dob)) % 12;
-    return `${years}.${months} years`;
+  const handleAddCow = () => {
+    navigate('/add-cow');
   };
 
-  const getStateDisplay = (cow: any) => {
-    return cow.gender === 'male' ? 'Bull' : cow.state;
+  const handleViewDetails = (cowId: string) => {
+    navigate(`/cow-details/${cowId}`);
   };
-
-  const getProductionDisplay = (cow: any) => {
-    return cow.gender === 'male' ? 'N/A' : `${cow.milking_per_year}L/year`;
-  };
-
-  const filteredRecords = records.filter((cow: any) => 
-    cow.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Cow Records</h1>
-        <Input 
-          className="w-full md:w-64" 
-          placeholder="Search records..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <Button onClick={handleAddCow}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Cow
+        </Button>
       </div>
-      
-      <Card className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-20 md:w-24"></TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Age</TableHead>
-              <TableHead>Gender</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead>Production</TableHead>
-              <TableHead>Health</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredRecords.map((record: any) => (
-              <TableRow 
-                key={record.id} 
-                className="cursor-pointer hover:bg-gray-50"
-                onClick={() => setSelectedCow(record)}
-              >
-                <TableCell>
-                  <div className="w-16 h-16 md:w-20 md:h-20 relative">
-                    <img 
-                      src={record.image_url || "/placeholder.svg"} 
-                      alt={record.name} 
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">{record.name}</TableCell>
-                <TableCell>{record.dob ? calculateAge(record.dob) : 'N/A'}</TableCell>
-                <TableCell>{record.gender}</TableCell>
-                <TableCell>{getStateDisplay(record)}</TableCell>
-                <TableCell>{getProductionDisplay(record)}</TableCell>
-                <TableCell>{record.deworming_status || 'Not Set'}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
 
-      {selectedCow && (
-        <Dialog 
-          open={!!selectedCow} 
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedCow(null);
-            }
-          }}
-        >
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{selectedCow.name}</DialogTitle>
-            </DialogHeader>
-            <CowDetails 
-              cowId={selectedCow.id} 
-              cowData={selectedCow} 
-              onUpdate={fetchCows}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Breed</TableHead>
+            <TableHead>Gender</TableHead>
+            <TableHead>Date of Birth</TableHead>
+            <TableHead>Deworming Status</TableHead>
+            <TableHead>Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {cows.map((cow) => (
+            <TableRow key={cow.id}>
+              <TableCell>{cow.name}</TableCell>
+              <TableCell>{cow.breed}</TableCell>
+              <TableCell>{cow.gender}</TableCell>
+              <TableCell>{cow.dob}</TableCell>
+              <TableCell>{cow.deworming_status}</TableCell>
+              <TableCell>
+                <Button variant="outline" onClick={() => handleViewDetails(cow.id)}>
+                  View Details
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };
