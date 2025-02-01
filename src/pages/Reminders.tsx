@@ -19,6 +19,12 @@ const Reminders = () => {
 
   const fetchReminders = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to view reminders");
+        return;
+      }
+
       const { data, error } = await supabase
         .from('reminders')
         .select('*')
@@ -82,14 +88,21 @@ const Reminders = () => {
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to create reminders");
+        return;
+      }
+
       const { error } = await supabase
         .from('reminders')
-        .insert([{  // Changed to array with single object
+        .insert([{
           title: formData.get("title") as string,
           description: formData.get("description") as string,
           date,
           notify_before: notifyBefore,
-          notification_date: notificationDate
+          notification_date: notificationDate,
+          user_id: user.id
         }]);
 
       if (error) throw error;
