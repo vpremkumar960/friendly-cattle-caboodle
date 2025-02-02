@@ -1,4 +1,3 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, User2 } from "lucide-react";
@@ -34,8 +33,8 @@ const BreedingTable = ({ breedingRecords, onRecordClick }: BreedingTableProps) =
       {breedingRecords.map((record: any) => (
         <Card 
           key={record.id}
-          className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => onRecordClick(record)}
+          className={`p-4 transition-shadow ${record.status !== 'Success' ? 'hover:shadow-lg cursor-pointer' : ''}`}
+          onClick={() => record.status !== 'Success' && onRecordClick(record)}
         >
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-start">
@@ -74,6 +73,12 @@ const BreedingTable = ({ breedingRecords, onRecordClick }: BreedingTableProps) =
                 </div>
               )}
             </div>
+            
+            {record.status === 'Success' && (
+              <div className="mt-2 text-sm text-gray-500 italic">
+                This record has been marked as successful and cannot be updated.
+              </div>
+            )}
           </div>
         </Card>
       ))}

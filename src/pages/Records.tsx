@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Image } from "lucide-react";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -41,7 +41,7 @@ const Records = () => {
   };
 
   const handleCowClick = (cowId: string) => {
-    navigate(`/cow-details/${cowId}`);
+    navigate(`/cow/${cowId}`);  // Updated route path
   };
 
   const getHealthStatusColor = (status: string) => {
@@ -81,7 +81,7 @@ const Records = () => {
                         e.stopPropagation();
                         setSelectedImage(cow.image_url);
                       }}
-                      className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100"
+                      className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200"
                     >
                       <img 
                         src={cow.image_url} 
@@ -119,7 +119,9 @@ const Records = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium">Last Deworming</p>
-                  <p className="text-sm text-gray-500">{cow.last_deworming_date || 'Not available'}</p>
+                  <p className="text-sm text-gray-500">
+                    {cow.last_deworming_date ? new Date(cow.last_deworming_date).toLocaleDateString() : 'Not available'}
+                  </p>
                 </div>
               </div>
             </div>
