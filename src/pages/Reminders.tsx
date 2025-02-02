@@ -2,16 +2,14 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const Reminders = () => {
   const [reminders, setReminders] = useState<any[]>([]);
-  const [showDialog, setShowDialog] = useState(false);
-  const [selectedReminder, setSelectedReminder] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -66,26 +64,12 @@ const Reminders = () => {
     }
   };
 
-  const validateForm = () => {
-    if (!formData.date) {
-      toast.error("Please select a reminder date");
-      return false;
-    }
-    if (!formData.title) {
-      toast.error("Please enter a title");
-      return false;
-    }
-    if (formData.recurrence_type === 'Custom' && !formData.recurrence_interval) {
-      toast.error("Please enter a recurrence interval");
-      return false;
-    }
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
+    if (!formData.date || !formData.title) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
     
     setIsSubmitting(true);
 
@@ -160,174 +144,143 @@ const Reminders = () => {
   return (
     <div className="p-6">
       <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-        <div>
-          <label className="block text-sm font-medium mb-1">Title</label>
-          <Input
-            value={formData.title}
-            onChange={(e) => handleInputChange('title', e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <Input
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Date</label>
-          <Input
-            type="date"
-            value={formData.date}
-            onChange={(e) => handleInputChange('date', e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Notify Before (days)</label>
-          <Input
-            type="number"
-            value={formData.notify_before}
-            onChange={(e) => handleInputChange('notify_before', e.target.value)}
-            required
-            min="1"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Recurrence</label>
-          <Select
-            value={formData.recurrence_type}
-            onValueChange={(value) => handleInputChange('recurrence_type', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select recurrence type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="None">None</SelectItem>
-              <SelectItem value="Daily">Daily</SelectItem>
-              <SelectItem value="Weekly">Weekly</SelectItem>
-              <SelectItem value="Monthly">Monthly</SelectItem>
-              <SelectItem value="Custom">Custom</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {formData.recurrence_type === 'Custom' && (
-          <div>
-            <label className="block text-sm font-medium mb-1">Recurrence Interval (days)</label>
-            <Input
-              type="number"
-              value={formData.recurrence_interval}
-              onChange={(e) => handleInputChange('recurrence_interval', e.target.value)}
-              min="1"
-            />
+        <Card className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Title</label>
+              <Input
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Date</label>
+              <Input
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleInputChange('date', e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Description</label>
+              <Input
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Notify Before (days)</label>
+              <Input
+                type="number"
+                value={formData.notify_before}
+                onChange={(e) => handleInputChange('notify_before', e.target.value)}
+                required
+                min="1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Recurrence</label>
+              <Select
+                value={formData.recurrence_type}
+                onValueChange={(value) => handleInputChange('recurrence_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select recurrence type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="None">None</SelectItem>
+                  <SelectItem value="Daily">Daily</SelectItem>
+                  <SelectItem value="Weekly">Weekly</SelectItem>
+                  <SelectItem value="Monthly">Monthly</SelectItem>
+                  <SelectItem value="Custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.recurrence_type === 'Custom' && (
+              <div>
+                <label className="block text-sm font-medium mb-1">Recurrence Interval (days)</label>
+                <Input
+                  type="number"
+                  value={formData.recurrence_interval}
+                  onChange={(e) => handleInputChange('recurrence_interval', e.target.value)}
+                  min="1"
+                />
+              </div>
+            )}
           </div>
-        )}
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Creating..." : "Create Reminder"}
-        </Button>
+          <div className="mt-4">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Reminder"}
+            </Button>
+          </div>
+        </Card>
       </form>
 
       <div className="space-y-6">
         <div>
           <h2 className="text-xl font-semibold mb-4">Active Reminders</h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Recurrence</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reminders
-                .filter(isActiveReminder)
-                .map((reminder) => (
-                  <TableRow key={reminder.id}>
-                    <TableCell>{reminder.title}</TableCell>
-                    <TableCell>{reminder.description}</TableCell>
-                    <TableCell>{new Date(reminder.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{reminder.recurrence_type}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(reminder.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reminders
+              .filter(isActiveReminder)
+              .map((reminder) => (
+                <Card key={reminder.id} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium">{reminder.title}</h3>
+                      <p className="text-sm text-gray-500">{reminder.description}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(reminder.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="mt-2">
+                    <Badge variant="outline">{reminder.recurrence_type}</Badge>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Due: {new Date(reminder.date).toLocaleDateString()}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+          </div>
         </div>
 
         <div>
           <h2 className="text-xl font-semibold mb-4">Completed Reminders</h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Recurrence</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reminders
-                .filter(reminder => !isActiveReminder(reminder))
-                .map((reminder) => (
-                  <TableRow key={reminder.id}>
-                    <TableCell>{reminder.title}</TableCell>
-                    <TableCell>{reminder.description}</TableCell>
-                    <TableCell>{new Date(reminder.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{reminder.recurrence_type}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(reminder.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reminders
+              .filter(reminder => !isActiveReminder(reminder))
+              .map((reminder) => (
+                <Card key={reminder.id} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium">{reminder.title}</h3>
+                      <p className="text-sm text-gray-500">{reminder.description}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(reminder.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="mt-2">
+                    <Badge variant="outline">{reminder.recurrence_type}</Badge>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Due: {new Date(reminder.date).toLocaleDateString()}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+          </div>
         </div>
       </div>
-
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reminder Details</DialogTitle>
-            <DialogDescription>View the details of your reminder.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="font-medium">Title</label>
-              <p>{selectedReminder?.title}</p>
-            </div>
-            <div>
-              <label className="font-medium">Description</label>
-              <p>{selectedReminder?.description}</p>
-            </div>
-            <div>
-              <label className="font-medium">Date</label>
-              <p>{selectedReminder?.date}</p>
-            </div>
-            <div>
-              <label className="font-medium">Notification Date</label>
-              <p>{selectedReminder?.notification_date}</p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

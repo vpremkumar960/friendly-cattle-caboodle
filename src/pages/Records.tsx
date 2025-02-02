@@ -40,18 +40,8 @@ const Records = () => {
     navigate('/add-cow');
   };
 
-  const calculateAge = (dob: string) => {
-    if (!dob) return "N/A";
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return `${age} years`;
+  const handleCowClick = (cowId: string) => {
+    navigate(`/cow-details/${cowId}`);
   };
 
   const getHealthStatusColor = (status: string) => {
@@ -75,12 +65,12 @@ const Records = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {cows.map((cow) => (
           <Card
             key={cow.id}
             className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => navigate(`/cow-details/${cow.id}`)}
+            onClick={() => handleCowClick(cow.id)}
           >
             <div className="flex flex-col space-y-4">
               <div className="flex justify-between items-start">
@@ -104,18 +94,18 @@ const Records = () => {
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium">State</p>
+                  <p className="text-sm text-gray-500">{cow.state || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Production (L/year)</p>
+                  <p className="text-sm text-gray-500">{cow.milking_per_year || 'N/A'}</p>
+                </div>
                 <div>
                   <p className="text-sm font-medium">Gender</p>
                   <p className="text-sm text-gray-500">{cow.gender}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Date of Birth</p>
-                  <p className="text-sm text-gray-500">{cow.dob}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Age</p>
-                  <p className="text-sm text-gray-500">{calculateAge(cow.dob)}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium">Last Deworming</p>
