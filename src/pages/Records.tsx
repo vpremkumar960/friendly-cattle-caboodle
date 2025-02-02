@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus, Image, Trash2 } from "lucide-react";
+import { Plus, Image } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const Records = () => {
   const [cows, setCows] = useState<any[]>([]);
@@ -53,25 +54,20 @@ const Records = () => {
     return `${age} years`;
   };
 
-  const handleDelete = async (cowId: string) => {
-    try {
-      const { error } = await supabase
-        .from('cows')
-        .delete()
-        .eq('id', cowId);
-
-      if (error) throw error;
-      toast.success("Cow record deleted successfully");
-      fetchCows();
-    } catch (error) {
-      console.error('Error deleting cow:', error);
-      toast.error("Failed to delete cow record");
+  const getHealthStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'done':
+        return 'bg-green-100 text-green-800';
+      case 'not done':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Cow Records</h1>
         <Button onClick={handleAddCow}>
           <Plus className="w-4 h-4 mr-2" />
@@ -79,54 +75,57 @@ const Records = () => {
         </Button>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Breed</TableHead>
-            <TableHead>Gender</TableHead>
-            <TableHead>Date of Birth</TableHead>
-            <TableHead>Age</TableHead>
-            <TableHead>Deworming Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {cows.map((cow) => (
-            <TableRow key={cow.id} className="cursor-pointer hover:bg-gray-50" onClick={() => navigate(`/cow-details/${cow.id}`)}>
-              <TableCell className="flex items-center gap-2">
-                {cow.image_url && (
-                  <Image
-                    className="w-4 h-4 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedImage(cow.image_url);
-                    }}
-                  />
-                )}
-                {cow.name}
-              </TableCell>
-              <TableCell>{cow.breed}</TableCell>
-              <TableCell>{cow.gender}</TableCell>
-              <TableCell>{cow.dob}</TableCell>
-              <TableCell>{calculateAge(cow.dob)}</TableCell>
-              <TableCell>{cow.deworming_status}</TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(cow.id);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <div className="grid grid-cols-1 gap-4">
+        {cows.map((cow) => (
+          <Card
+            key={cow.id}
+            className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate(`/cow-details/${cow.id}`)}
+          >
+            <div className="flex flex-col space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center space-x-3">
+                  {cow.image_url && (
+                    <Image
+                      className="w-4 h-4 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedImage(cow.image_url);
+                      }}
+                    />
+                  )}
+                  <div>
+                    <h3 className="font-medium">{cow.name}</h3>
+                    <p className="text-sm text-gray-500">{cow.breed}</p>
+                  </div>
+                </div>
+                <Badge className={getHealthStatusColor(cow.deworming_status)}>
+                  {cow.deworming_status}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm font-medium">Gender</p>
+                  <p className="text-sm text-gray-500">{cow.gender}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Date of Birth</p>
+                  <p className="text-sm text-gray-500">{cow.dob}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Age</p>
+                  <p className="text-sm text-gray-500">{calculateAge(cow.dob)}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Last Deworming</p>
+                  <p className="text-sm text-gray-500">{cow.last_deworming_date || 'Not available'}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
 
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
         <DialogContent className="max-w-4xl">
