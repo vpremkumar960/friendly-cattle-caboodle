@@ -43,6 +43,9 @@ const Breeding = () => {
 
   const fetchExistingCows = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data: cows, error } = await supabase
         .from('cows')
         .select('*')

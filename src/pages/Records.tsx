@@ -76,13 +76,19 @@ const Records = () => {
               <div className="flex justify-between items-start">
                 <div className="flex items-center space-x-3">
                   {cow.image_url && (
-                    <Image
-                      className="w-4 h-4 cursor-pointer"
+                    <div 
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedImage(cow.image_url);
                       }}
-                    />
+                      className="relative w-16 h-16 rounded-lg overflow-hidden"
+                    >
+                      <img 
+                        src={cow.image_url} 
+                        alt={cow.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   )}
                   <div>
                     <h3 className="font-medium">{cow.name}</h3>
