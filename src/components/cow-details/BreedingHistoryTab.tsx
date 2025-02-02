@@ -67,7 +67,6 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
       toast.success("Breeding record added successfully!");
       if (onUpdate) onUpdate();
       
-      // Reset form
       setFormData({
         inseminationDate: '',
         bullSemen: '',
@@ -81,6 +80,10 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const isRecordEditable = (record: any) => {
+    return record.status !== 'Success';
   };
 
   return (
@@ -176,11 +179,19 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
           </TableRow>
         </TableHeader>
         <TableBody>
-          {breedingHistory.map((record: any, index: number) => (
-            <TableRow key={index}>
+          {breedingHistory.map((record: any) => (
+            <TableRow key={record.id} className={!isRecordEditable(record) ? 'bg-gray-50' : ''}>
               <TableCell>{record.insemination_date}</TableCell>
               <TableCell>{record.bull_semen}</TableCell>
-              <TableCell>{record.status}</TableCell>
+              <TableCell>
+                <span className={`px-2 py-1 rounded-full text-sm ${
+                  record.status === 'Success' ? 'bg-green-100 text-green-800' :
+                  record.status === 'Failed' ? 'bg-red-100 text-red-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {record.status}
+                </span>
+              </TableCell>
               <TableCell>{record.expected_calving_date || '-'}</TableCell>
               <TableCell>{record.calf_gender || '-'}</TableCell>
               <TableCell>{record.calf_name || '-'}</TableCell>

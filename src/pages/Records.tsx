@@ -81,12 +81,16 @@ const Records = () => {
                         e.stopPropagation();
                         setSelectedImage(cow.image_url);
                       }}
-                      className="relative w-16 h-16 rounded-lg overflow-hidden"
+                      className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100"
                     >
                       <img 
                         src={cow.image_url} 
                         alt={cow.name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder.svg';
+                        }}
                       />
                     </div>
                   )}

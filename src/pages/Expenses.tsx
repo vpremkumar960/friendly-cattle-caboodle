@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -16,9 +17,13 @@ const Expenses = () => {
 
   const fetchExpenses = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -60,14 +65,24 @@ const Expenses = () => {
       <h1 className="text-2xl font-bold">Expenses</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {expenses.map((expense) => (
-          <Card key={expense.id} className="p-4 flex justify-between items-center">
-            <div>
-              <h3 className="font-medium">{expense.title}</h3>
-              <p className="text-sm text-gray-500">${expense.amount}</p>
+          <Card key={expense.id} className="p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-medium">{expense.category}</h3>
+                <p className="text-sm text-gray-500">{expense.description}</p>
+                <p className="text-sm font-medium mt-2">${expense.amount}</p>
+                <p className="text-xs text-gray-500">
+                  {new Date(expense.date).toLocaleDateString()}
+                </p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => openDeleteDialog(expense.id)}
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </Button>
             </div>
-            <Button variant="ghost" onClick={() => openDeleteDialog(expense.id)}>
-              Delete
-            </Button>
           </Card>
         ))}
       </div>
@@ -79,10 +94,10 @@ const Expenses = () => {
           </DialogHeader>
           <div className="space-y-4">
             <p>Are you sure you want to delete this expense?</p>
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={closeDeleteDialog}>Cancel</Button>
               <Button
-                className="ml-2"
+                variant="destructive"
                 onClick={() => {
                   if (selectedExpenseId) {
                     handleDelete(selectedExpenseId);
