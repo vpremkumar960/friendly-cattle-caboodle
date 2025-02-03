@@ -1,13 +1,15 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, User2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, User2, Trash2 } from "lucide-react";
 
 interface BreedingTableProps {
   breedingRecords: any[];
   onRecordClick: (record: any) => void;
+  onDeleteRecord: (recordId: string) => void;
 }
 
-const BreedingTable = ({ breedingRecords, onRecordClick }: BreedingTableProps) => {
+const BreedingTable = ({ breedingRecords, onRecordClick, onDeleteRecord }: BreedingTableProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Success':
@@ -28,13 +30,17 @@ const BreedingTable = ({ breedingRecords, onRecordClick }: BreedingTableProps) =
     });
   };
 
+  const isRecordComplete = (record: any) => {
+    return record.status === 'Success' && record.calving_date && record.calf_gender && record.calf_name;
+  };
+
   return (
     <div className="space-y-4">
       {breedingRecords.map((record: any) => (
         <Card 
           key={record.id}
-          className={`p-4 transition-shadow ${record.status !== 'Success' ? 'hover:shadow-lg cursor-pointer' : ''}`}
-          onClick={() => record.status !== 'Success' && onRecordClick(record)}
+          className={`p-4 transition-shadow ${!isRecordComplete(record) ? 'hover:shadow-lg cursor-pointer' : ''}`}
+          onClick={() => !isRecordComplete(record) && onRecordClick(record)}
         >
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-start">
@@ -45,9 +51,23 @@ const BreedingTable = ({ breedingRecords, onRecordClick }: BreedingTableProps) =
                   <p className="text-sm text-gray-500">Bull Semen: {record.bull_semen}</p>
                 </div>
               </div>
-              <Badge className={getStatusColor(record.status)}>
-                {record.status}
-              </Badge>
+              <div className="flex items-center space-x-2">
+                <Badge className={getStatusColor(record.status)}>
+                  {record.status}
+                </Badge>
+                {!isRecordComplete(record) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteRecord(record.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                )}
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -74,9 +94,9 @@ const BreedingTable = ({ breedingRecords, onRecordClick }: BreedingTableProps) =
               )}
             </div>
             
-            {record.status === 'Success' && (
+            {isRecordComplete(record) && (
               <div className="mt-2 text-sm text-gray-500 italic">
-                This record has been marked as successful and cannot be updated.
+                This record is complete and cannot be modified.
               </div>
             )}
           </div>

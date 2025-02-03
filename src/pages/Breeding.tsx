@@ -103,7 +103,8 @@ const Breeding = () => {
         .update({
           calving_date: calvingDate,
           calf_gender: calfGender,
-          calf_name: calfName
+          calf_name: calfName,
+          status: 'Success' // Only set to success when all details are provided
         })
         .eq('id', selectedRecord.id);
 
@@ -122,11 +123,33 @@ const Breeding = () => {
   };
 
   const handleRecordClick = (record: any) => {
+    // Only allow updates if the record is not complete (doesn't have all calving details)
+    if (record.status === 'Success' && record.calving_date && record.calf_gender && record.calf_name) {
+      toast.info("This record is complete and cannot be modified");
+      return;
+    }
+    
     setSelectedRecord(record);
-    if (record.status === 'Success' && !record.calving_date) {
+    if (record.status === 'Success' && (!record.calving_date || !record.calf_gender || !record.calf_name)) {
       setShowCalvingDialog(true);
     } else {
       setShowStatusDialog(true);
+    }
+  };
+
+  const handleDeleteRecord = async (recordId: string) => {
+    try {
+      const { error } = await supabase
+        .from('breeding_records')
+        .delete()
+        .eq('id', recordId);
+
+      if (error) throw error;
+      toast.success("Record deleted successfully");
+      fetchBreedingRecords();
+    } catch (error) {
+      console.error('Error deleting record:', error);
+      toast.error("Failed to delete record");
     }
   };
 
@@ -143,6 +166,7 @@ const Breeding = () => {
       <BreedingTable
         breedingRecords={breedingRecords}
         onRecordClick={handleRecordClick}
+        onDeleteRecord={handleDeleteRecord}
       />
 
       <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
