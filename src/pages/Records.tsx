@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Grid, List, Milk, Heart, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import CowDetails from "@/components/CowDetails";
 
 const Records = () => {
   const [cows, setCows] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedCow, setSelectedCow] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,8 +43,8 @@ const Records = () => {
     navigate('/add-cow');
   };
 
-  const handleCowClick = (cowId: string) => {
-    navigate(`/cow/${cowId}`);  // Updated route path
+  const handleCowClick = (cow: any) => {
+    setSelectedCow(cow);
   };
 
   const getHealthStatusColor = (status: string) => {
@@ -55,79 +58,167 @@ const Records = () => {
     }
   };
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Cow Records</h1>
-        <Button onClick={handleAddCow}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Cow
-        </Button>
-      </div>
+  const GridView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {cows.map((cow) => (
+        <Card
+          key={cow.id}
+          className="group hover:shadow-lg transition-all duration-300 overflow-hidden"
+          onClick={() => handleCowClick(cow)}
+        >
+          <div className="relative h-48 bg-gray-100">
+            <img
+              src={cow.image_url || '/placeholder.svg'}
+              alt={cow.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/placeholder.svg';
+              }}
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4">
+              <Badge className="bg-white/90 text-black hover:bg-white">
+                <Milk className="w-4 h-4 mr-1" />
+                {cow.state || 'N/A'}
+              </Badge>
+              <Badge className="bg-white/90 text-black hover:bg-white">
+                <Heart className="w-4 h-4 mr-1" />
+                {cow.breed || 'N/A'}
+              </Badge>
+              <Badge className="bg-white/90 text-black hover:bg-white">
+                <Activity className="w-4 h-4 mr-1" />
+                {cow.deworming_status}
+              </Badge>
+            </div>
+          </div>
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="font-semibold text-lg">{cow.name}</h3>
+                <p className="text-sm text-gray-500">{cow.gender}</p>
+              </div>
+              <Badge className={getHealthStatusColor(cow.deworming_status)}>
+                {cow.deworming_status}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <p className="text-gray-500">Production</p>
+                <p className="font-medium">{cow.milking_per_year || 'N/A'} L/year</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Last Deworming</p>
+                <p className="font-medium">
+                  {cow.last_deworming_date ? new Date(cow.last_deworming_date).toLocaleDateString() : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cows.map((cow) => (
-          <Card
-            key={cow.id}
-            className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => handleCowClick(cow.id)}
-          >
-            <div className="flex flex-col space-y-4">
+  const ListView = () => (
+    <div className="space-y-4">
+      {cows.map((cow) => (
+        <Card
+          key={cow.id}
+          className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+          onClick={() => handleCowClick(cow)}
+        >
+          <div className="flex items-center space-x-4">
+            <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
+              <img
+                src={cow.image_url || '/placeholder.svg'}
+                alt={cow.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/placeholder.svg';
+                }}
+              />
+            </div>
+            <div className="flex-1">
               <div className="flex justify-between items-start">
-                <div className="flex items-center space-x-3">
-                  {cow.image_url && (
-                    <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedImage(cow.image_url);
-                      }}
-                      className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200"
-                    >
-                      <img 
-                        src={cow.image_url} 
-                        alt={cow.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/placeholder.svg';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="font-medium">{cow.name}</h3>
-                    <p className="text-sm text-gray-500">{cow.breed}</p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold">{cow.name}</h3>
+                  <p className="text-sm text-gray-500">{cow.breed}</p>
                 </div>
                 <Badge className={getHealthStatusColor(cow.deworming_status)}>
                   {cow.deworming_status}
                 </Badge>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4 mt-2">
                 <div>
                   <p className="text-sm font-medium">State</p>
                   <p className="text-sm text-gray-500">{cow.state || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Production (L/year)</p>
-                  <p className="text-sm text-gray-500">{cow.milking_per_year || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Gender</p>
-                  <p className="text-sm text-gray-500">{cow.gender}</p>
+                  <p className="text-sm font-medium">Production</p>
+                  <p className="text-sm text-gray-500">{cow.milking_per_year || 'N/A'} L/year</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium">Last Deworming</p>
                   <p className="text-sm text-gray-500">
-                    {cow.last_deworming_date ? new Date(cow.last_deworming_date).toLocaleDateString() : 'Not available'}
+                    {cow.last_deworming_date ? new Date(cow.last_deworming_date).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
               </div>
             </div>
-          </Card>
-        ))}
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Cow Records</h1>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 bg-secondary rounded-lg p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+            >
+              <Grid className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+          <Button onClick={handleAddCow}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Cow
+          </Button>
+        </div>
       </div>
+
+      {viewMode === 'grid' ? <GridView /> : <ListView />}
+
+      <Dialog open={!!selectedCow} onOpenChange={(open) => !open && setSelectedCow(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Cow Details</DialogTitle>
+          </DialogHeader>
+          {selectedCow && (
+            <CowDetails
+              cowId={selectedCow.id}
+              cowData={selectedCow}
+              onUpdate={() => {
+                fetchCows();
+                setSelectedCow(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
         <DialogContent className="max-w-4xl">

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const Reminders = () => {
   const [reminders, setReminders] = useState<any[]>([]);
@@ -20,6 +21,8 @@ const Reminders = () => {
     recurrence_type: "None",
     recurrence_interval: ""
   });
+  const [selectedReminder, setSelectedReminder] = useState<any>(null);
+  const [showReminderDialog, setShowReminderDialog] = useState(false);
 
   useEffect(() => {
     fetchReminders();
@@ -141,6 +144,11 @@ const Reminders = () => {
     return reminderDate >= today;
   };
 
+  const handleReminderClick = (reminder: any) => {
+    setSelectedReminder(reminder);
+    setShowReminderDialog(true);
+  };
+
   return (
     <div className="p-6">
       <form onSubmit={handleSubmit} className="space-y-4 mb-8">
@@ -225,17 +233,13 @@ const Reminders = () => {
             {reminders
               .filter(isActiveReminder)
               .map((reminder) => (
-                <Card key={reminder.id} className="p-4">
+                <Card key={reminder.id} className="p-4 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleReminderClick(reminder)}>
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium">{reminder.title}</h3>
                       <p className="text-sm text-gray-500">{reminder.description}</p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(reminder.id)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(reminder.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -256,17 +260,13 @@ const Reminders = () => {
             {reminders
               .filter(reminder => !isActiveReminder(reminder))
               .map((reminder) => (
-                <Card key={reminder.id} className="p-4">
+                <Card key={reminder.id} className="p-4 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleReminderClick(reminder)}>
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium">{reminder.title}</h3>
                       <p className="text-sm text-gray-500">{reminder.description}</p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(reminder.id)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(reminder.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -281,6 +281,44 @@ const Reminders = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={showReminderDialog} onOpenChange={setShowReminderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reminder Details</DialogTitle>
+          </DialogHeader>
+          {selectedReminder && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Title</label>
+                <p className="text-sm">{selectedReminder.title}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <p className="text-sm">{selectedReminder.description}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Due Date</label>
+                <p className="text-sm">{new Date(selectedReminder.date).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Notify Before</label>
+                <p className="text-sm">{selectedReminder.notify_before} days</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Recurrence</label>
+                <p className="text-sm">{selectedReminder.recurrence_type}</p>
+              </div>
+              {selectedReminder.recurrence_type === 'Custom' && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Recurrence Interval</label>
+                  <p className="text-sm">{selectedReminder.recurrence_interval} days</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
