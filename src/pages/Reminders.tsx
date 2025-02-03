@@ -239,7 +239,14 @@ const Reminders = () => {
                       <h3 className="font-medium">{reminder.title}</h3>
                       <p className="text-sm text-gray-500">{reminder.description}</p>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(reminder.id)}>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(reminder.id);
+                      }}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

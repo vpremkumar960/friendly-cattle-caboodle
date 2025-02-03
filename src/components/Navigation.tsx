@@ -36,7 +36,7 @@ const Navigation = () => {
   const NavigationContent = () => (
     <>
       <div className="p-4 border-b">
-        <h1 className="text-xl font-bold">Farm Manager</h1>
+        <h1 className="text-xl font-bold">Prasanth Farm</h1>
       </div>
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
@@ -75,13 +75,11 @@ const Navigation = () => {
     <>
       {/* Mobile Navigation */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Farm Manager</h1>
+        <Button variant="ghost" size="icon" onClick={() => setOpen(true)}>
+          <Menu className="h-6 w-6" />
+        </Button>
+        <h1 className="text-xl font-bold">Prasanth Farm</h1>
         <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
           <SheetContent side="left" className="p-0 w-[240px]">
             <NavigationContent />
           </SheetContent>
