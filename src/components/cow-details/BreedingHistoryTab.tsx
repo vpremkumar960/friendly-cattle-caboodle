@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface BreedingHistoryTabProps {
   cowId: string;
@@ -167,38 +168,40 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
           </DialogContent>
         </Dialog>
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Insemination Date</TableHead>
-            <TableHead>Bull Semen</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Expected Calving</TableHead>
-            <TableHead>Calf Gender</TableHead>
-            <TableHead>Calf Name</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {breedingHistory.map((record: any) => (
-            <TableRow key={record.id} className={!isRecordEditable(record) ? 'bg-gray-50' : ''}>
-              <TableCell>{record.insemination_date}</TableCell>
-              <TableCell>{record.bull_semen}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-sm ${
-                  record.status === 'Success' ? 'bg-green-100 text-green-800' :
-                  record.status === 'Failed' ? 'bg-red-100 text-red-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {record.status}
-                </span>
-              </TableCell>
-              <TableCell>{record.expected_calving_date || '-'}</TableCell>
-              <TableCell>{record.calf_gender || '-'}</TableCell>
-              <TableCell>{record.calf_name || '-'}</TableCell>
+      <ScrollArea className="h-[400px] w-full">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Insemination Date</TableHead>
+              <TableHead>Bull Semen</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Expected Calving</TableHead>
+              <TableHead>Calf Gender</TableHead>
+              <TableHead>Calf Name</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {breedingHistory.map((record: any) => (
+              <TableRow key={record.id}>
+                <TableCell>{record.insemination_date}</TableCell>
+                <TableCell>{record.bull_semen}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-sm ${
+                    record.status === 'Success' ? 'bg-green-100 text-green-800' :
+                    record.status === 'Failed' ? 'bg-red-100 text-red-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {record.status}
+                  </span>
+                </TableCell>
+                <TableCell>{record.expected_calving_date || '-'}</TableCell>
+                <TableCell>{record.calf_gender || '-'}</TableCell>
+                <TableCell>{record.calf_name || '-'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
     </Card>
   );
 };

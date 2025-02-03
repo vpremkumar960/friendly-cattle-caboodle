@@ -43,21 +43,17 @@ const ImageCarousel = ({ images, onEdit }: ImageCarouselProps) => {
             target.src = '/placeholder.svg';
           }}
         />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-2 right-2"
-        >
-          <Maximize2 className="h-4 w-4" />
-        </Button>
       </div>
       
       {onEdit && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2 right-12"
-          onClick={onEdit}
+          className="absolute top-2 right-2"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onEdit) onEdit();
+          }}
         >
           <Edit className="h-4 w-4" />
         </Button>
@@ -68,7 +64,10 @@ const ImageCarousel = ({ images, onEdit }: ImageCarouselProps) => {
           <Button
             variant="secondary"
             size="icon"
-            onClick={() => navigateImage('prev')}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigateImage('prev');
+            }}
             disabled={currentImageIndex === 0}
             className="bg-white/80 hover:bg-white"
           >
@@ -77,7 +76,10 @@ const ImageCarousel = ({ images, onEdit }: ImageCarouselProps) => {
           <Button
             variant="secondary"
             size="icon"
-            onClick={() => navigateImage('next')}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigateImage('next');
+            }}
             disabled={currentImageIndex === images.length - 1}
             className="bg-white/80 hover:bg-white"
           >

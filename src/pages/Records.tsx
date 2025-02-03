@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import CowDetails from "@/components/CowDetails";
+import { differenceInMonths } from "date-fns";
 
 const Records = () => {
   const [cows, setCows] = useState<any[]>([]);
@@ -58,12 +59,27 @@ const Records = () => {
     }
   };
 
+  const calculateAge = (dob: string) => {
+    if (!dob) return 'N/A';
+    const months = differenceInMonths(new Date(), new Date(dob));
+    const years = Math.floor(months / 12);
+    const remainingMonths = months % 12;
+    
+    if (years === 0) {
+      return `${remainingMonths} months`;
+    } else if (remainingMonths === 0) {
+      return `${years} years`;
+    } else {
+      return `${years}.${Math.floor(remainingMonths / 12 * 10)} years`;
+    }
+  };
+
   const GridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {cows.map((cow) => (
         <Card
           key={cow.id}
-          className="group hover:shadow-lg transition-all duration-300 overflow-hidden"
+          className="group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer"
           onClick={() => handleCowClick(cow)}
         >
           <div className="relative h-48 bg-gray-100">
@@ -95,7 +111,7 @@ const Records = () => {
             <div className="flex justify-between items-start mb-2">
               <div>
                 <h3 className="font-semibold text-lg">{cow.name}</h3>
-                <p className="text-sm text-gray-500">{cow.gender}</p>
+                <p className="text-sm text-gray-500">Age: {calculateAge(cow.dob)}</p>
               </div>
               <Badge className={getHealthStatusColor(cow.deworming_status)}>
                 {cow.deworming_status}
