@@ -75,10 +75,10 @@ const Navigation = () => {
     <>
       {/* Mobile Navigation */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b p-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">Prasanth Farm</h1>
         <Button variant="ghost" size="icon" onClick={() => setOpen(true)}>
           <Menu className="h-6 w-6" />
         </Button>
-        <h1 className="text-xl font-bold">Prasanth Farm</h1>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetContent side="left" className="p-0 w-[240px]">
             <NavigationContent />

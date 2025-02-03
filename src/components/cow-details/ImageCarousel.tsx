@@ -37,7 +37,7 @@ const ImageCarousel = ({ images, onEdit }: ImageCarouselProps) => {
         <img 
           src={images[currentImageIndex]} 
           alt="Cow" 
-          className="w-full h-auto rounded-lg object-cover mb-4"
+          className="w-full h-64 rounded-lg object-cover mb-4"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder.svg';
@@ -64,20 +64,22 @@ const ImageCarousel = ({ images, onEdit }: ImageCarouselProps) => {
       )}
 
       {images.length > 1 && (
-        <div className="absolute bottom-0 left-0 right-0 flex justify-between p-2">
+        <div className="absolute bottom-4 left-0 right-0 flex justify-between px-4">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="icon"
             onClick={() => navigateImage('prev')}
             disabled={currentImageIndex === 0}
+            className="bg-white/80 hover:bg-white"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
+            variant="secondary"
             size="icon"
             onClick={() => navigateImage('next')}
             disabled={currentImageIndex === images.length - 1}
+            className="bg-white/80 hover:bg-white"
           >
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -100,20 +102,22 @@ const ImageCarousel = ({ images, onEdit }: ImageCarouselProps) => {
               }}
             />
             {images.length > 1 && (
-              <div className="absolute bottom-0 left-0 right-0 flex justify-between p-2">
+              <div className="absolute bottom-4 left-0 right-0 flex justify-between px-4">
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="icon"
                   onClick={() => navigateImage('prev')}
                   disabled={currentImageIndex === 0}
+                  className="bg-white/80 hover:bg-white"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="icon"
                   onClick={() => navigateImage('next')}
                   disabled={currentImageIndex === images.length - 1}
+                  className="bg-white/80 hover:bg-white"
                 >
                   <ArrowRight className="h-4 w-4" />
                 </Button>
