@@ -168,17 +168,18 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
           </DialogContent>
         </Dialog>
       </div>
-      <div className="overflow-x-auto">
-        <ScrollArea className="h-[400px]">
+      
+      <ScrollArea className="h-[400px] w-full">
+        <div className="w-full min-w-[600px]">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[120px]">Insemination Date</TableHead>
-                <TableHead className="min-w-[120px]">Bull Semen</TableHead>
-                <TableHead className="min-w-[100px]">Status</TableHead>
-                <TableHead className="min-w-[120px]">Expected Calving</TableHead>
-                <TableHead className="min-w-[100px]">Calf Gender</TableHead>
-                <TableHead className="min-w-[120px]">Calf Name</TableHead>
+                <TableHead>Insemination Date</TableHead>
+                <TableHead>Bull Semen</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Expected Calving</TableHead>
+                <TableHead>Calf Gender</TableHead>
+                <TableHead>Calf Name</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -202,8 +203,8 @@ const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistor
               ))}
             </TableBody>
           </Table>
-        </ScrollArea>
-      </div>
+        </div>
+      </ScrollArea>
     </Card>
   );
 };

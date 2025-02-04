@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, ArrowRight, Edit, Maximize2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,7 +33,7 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${cowId}-${Date.now()}.${fileExt}`;
-      const { error: uploadError, data } = await supabase
+      const { error: uploadError } = await supabase
         .storage
         .from('cow-images')
         .upload(fileName, file, {
