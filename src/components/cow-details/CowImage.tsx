@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, ArrowRight, Edit } from "lucide-react";
@@ -11,12 +11,21 @@ interface CowImageProps {
   onUpdate?: () => void;
 }
 
-const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
+const CowImage = ({ cowId, images = [], onUpdate }: CowImageProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageEditDialog, setShowImageEditDialog] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [displayImages, setDisplayImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (images && images.length > 0) {
+      setDisplayImages(images);
+    } else {
+      setDisplayImages(['/placeholder.svg']);
+    }
+  }, [images]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,21 +78,16 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
   const navigateImage = (direction: 'prev' | 'next') => {
     if (direction === 'prev' && currentImageIndex > 0) {
       setCurrentImageIndex(currentImageIndex - 1);
-    } else if (direction === 'next' && currentImageIndex < images.length - 1) {
+    } else if (direction === 'next' && currentImageIndex < displayImages.length - 1) {
       setCurrentImageIndex(currentImageIndex + 1);
     }
   };
 
-  const currentImage = images[currentImageIndex];
-
   return (
     <div className="relative">
-      <div 
-        className="cursor-pointer"
-        onClick={() => setShowImageModal(true)}
-      >
+      <div className="cursor-pointer" onClick={() => setShowImageModal(true)}>
         <img 
-          src={currentImage || '/placeholder.svg'} 
+          src={displayImages[currentImageIndex]} 
           alt="Cow" 
           className="w-full h-64 object-cover rounded-lg mb-4"
           onError={(e) => {
@@ -92,7 +96,7 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
           }}
         />
       </div>
-      
+
       <div className="absolute top-2 right-2">
         <Dialog open={showImageEditDialog} onOpenChange={setShowImageEditDialog}>
           <DialogTrigger asChild>
@@ -103,9 +107,7 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Upload Image</DialogTitle>
-              <DialogDescription>
-                Choose an image file to upload for this cow.
-              </DialogDescription>
+              <DialogDescription>Choose an image file to upload for this cow.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <input
@@ -126,7 +128,7 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
         </Dialog>
       </div>
 
-      {images.length > 1 && (
+      {displayImages.length > 1 && (
         <div className="absolute bottom-6 left-0 right-0 flex justify-between px-4">
           <Button
             variant="secondary"
@@ -147,7 +149,7 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
               e.stopPropagation();
               navigateImage('next');
             }}
-            disabled={currentImageIndex === images.length - 1}
+            disabled={currentImageIndex === displayImages.length - 1}
             className="bg-white/80 hover:bg-white"
           >
             <ArrowRight className="h-4 w-4" />
@@ -162,7 +164,7 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
           </DialogHeader>
           <div className="relative">
             <img 
-              src={currentImage} 
+              src={displayImages[currentImageIndex]} 
               alt="Cow" 
               className="w-full h-auto rounded-lg"
               onError={(e) => {
@@ -170,7 +172,7 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
                 target.src = '/placeholder.svg';
               }}
             />
-            {images.length > 1 && (
+            {displayImages.length > 1 && (
               <div className="absolute bottom-4 left-0 right-0 flex justify-between px-4">
                 <Button
                   variant="secondary"
@@ -185,7 +187,7 @@ const CowImage = ({ cowId, images, onUpdate }: CowImageProps) => {
                   variant="secondary"
                   size="icon"
                   onClick={() => navigateImage('next')}
-                  disabled={currentImageIndex === images.length - 1}
+                  disabled={currentImageIndex === displayImages.length - 1}
                   className="bg-white/80 hover:bg-white"
                 >
                   <ArrowRight className="h-4 w-4" />
