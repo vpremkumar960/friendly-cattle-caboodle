@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, ArrowRight, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import CowImageCarousel from "./image/CowImageCarousel";
 
 interface CowImageProps {
   cowId: string;
@@ -12,9 +12,7 @@ interface CowImageProps {
 }
 
 const CowImage = ({ cowId, images = [], onUpdate }: CowImageProps) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageEditDialog, setShowImageEditDialog] = useState(false);
-  const [showImageModal, setShowImageModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [displayImages, setDisplayImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -75,125 +73,33 @@ const CowImage = ({ cowId, images = [], onUpdate }: CowImageProps) => {
     }
   };
 
-  const navigateImage = (direction: 'prev' | 'next') => {
-    if (direction === 'prev' && currentImageIndex > 0) {
-      setCurrentImageIndex(currentImageIndex - 1);
-    } else if (direction === 'next' && currentImageIndex < displayImages.length - 1) {
-      setCurrentImageIndex(currentImageIndex + 1);
-    }
-  };
-
   return (
-    <div className="relative">
-      <div className="cursor-pointer" onClick={() => setShowImageModal(true)}>
-        <img 
-          src={displayImages[currentImageIndex]} 
-          alt="Cow" 
-          className="w-full h-64 object-cover rounded-lg mb-4"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '/placeholder.svg';
-          }}
-        />
-      </div>
+    <div>
+      <CowImageCarousel 
+        images={displayImages}
+        onEdit={() => setShowImageEditDialog(true)}
+      />
 
-      <div className="absolute top-2 right-2">
-        <Dialog open={showImageEditDialog} onOpenChange={setShowImageEditDialog}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Edit className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Upload Image</DialogTitle>
-              <DialogDescription>Choose an image file to upload for this cow.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <Button 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-              >
-                {isUploading ? "Uploading..." : "Select Image"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {displayImages.length > 1 && (
-        <div className="absolute bottom-6 left-0 right-0 flex justify-between px-4">
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigateImage('prev');
-            }}
-            disabled={currentImageIndex === 0}
-            className="bg-white/80 hover:bg-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigateImage('next');
-            }}
-            disabled={currentImageIndex === displayImages.length - 1}
-            className="bg-white/80 hover:bg-white"
-          >
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      <Dialog open={showImageModal} onOpenChange={setShowImageModal}>
-        <DialogContent className="max-w-4xl">
+      <Dialog open={showImageEditDialog} onOpenChange={setShowImageEditDialog}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Image Preview</DialogTitle>
+            <DialogTitle>Upload Image</DialogTitle>
+            <DialogDescription>Choose an image file to upload for this cow.</DialogDescription>
           </DialogHeader>
-          <div className="relative">
-            <img 
-              src={displayImages[currentImageIndex]} 
-              alt="Cow" 
-              className="w-full h-auto rounded-lg"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/placeholder.svg';
-              }}
+          <div className="space-y-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
             />
-            {displayImages.length > 1 && (
-              <div className="absolute bottom-4 left-0 right-0 flex justify-between px-4">
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  onClick={() => navigateImage('prev')}
-                  disabled={currentImageIndex === 0}
-                  className="bg-white/80 hover:bg-white"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  onClick={() => navigateImage('next')}
-                  disabled={currentImageIndex === displayImages.length - 1}
-                  className="bg-white/80 hover:bg-white"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+            <Button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              {isUploading ? "Uploading..." : "Select Image"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
