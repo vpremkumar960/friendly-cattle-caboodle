@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Leaf, TrendingUp, TrendingDown } from "lucide-react";
+import { Leaf, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Home = () => {
   const { data: expensesData } = useQuery({
@@ -65,12 +66,21 @@ const Home = () => {
     return acc;
   }, {});
 
+  const expensesByCategory = expensesData?.reduce((acc: any, expense) => {
+    acc[expense.category] = (acc[expense.category] || 0) + Number(expense.amount);
+    return acc;
+  }, {});
+
+  const categoryData = Object.entries(expensesByCategory || {}).map(([category, amount]) => ({
+    category,
+    amount
+  }));
+
   const chartData = Object.entries(expensesByMonth || {}).map(([month, amount]) => ({
     month,
     amount
   }));
 
-  // Calculate month-over-month expense change
   const sortedMonths = Object.keys(expensesByMonth || {}).sort((a, b) => {
     const monthsOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return monthsOrder.indexOf(a) - monthsOrder.indexOf(b);
@@ -125,7 +135,7 @@ const Home = () => {
               <p className="text-2xl font-bold">₹{totalExpenses.toLocaleString()}</p>
             </div>
             <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-purple-600" />
+              <DollarSign className="h-6 w-6 text-purple-600" />
             </div>
           </div>
           <p className="text-sm text-gray-500 mt-2">Lifetime expenses</p>
@@ -145,29 +155,47 @@ const Home = () => {
         </Card>
       </div>
 
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Monthly Expenses Overview</h2>
-        <div className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="amount" 
-                stroke="#8884d8" 
-                name="Expenses (₹)" 
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 8 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Monthly Expenses Overview</h2>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="amount" 
+                  stroke="#8884d8" 
+                  name="Expenses (₹)" 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 8 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Expenses by Category</h2>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={categoryData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="category" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="amount" fill="#8884d8" name="Amount (₹)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

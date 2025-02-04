@@ -24,6 +24,16 @@ const ImageCarousel = ({ images, onEdit }: ImageCarouselProps) => {
     return (
       <div className="relative bg-gray-100 rounded-lg h-64 flex items-center justify-center">
         <p className="text-gray-500">No images available</p>
+        {onEdit && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2"
+            onClick={onEdit}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     );
   }
@@ -37,7 +47,7 @@ const ImageCarousel = ({ images, onEdit }: ImageCarouselProps) => {
         <img 
           src={images[currentImageIndex]} 
           alt="Cow" 
-          className="w-full h-64 rounded-lg object-cover mb-4"
+          className="w-full h-64 object-cover rounded-lg mb-4"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder.svg';
@@ -60,7 +70,7 @@ const ImageCarousel = ({ images, onEdit }: ImageCarouselProps) => {
       )}
 
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-0 right-0 flex justify-between px-4">
+        <div className="absolute bottom-6 left-0 right-0 flex justify-between px-4">
           <Button
             variant="secondary"
             size="icon"
