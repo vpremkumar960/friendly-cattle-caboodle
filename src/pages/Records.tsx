@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import CowDetails from "@/components/CowDetails";
 import { differenceInMonths } from "date-fns";
+import { calculateAge } from "@/utils/dateUtils";
 
 const Records = () => {
   const [cows, setCows] = useState<any[]>([]);

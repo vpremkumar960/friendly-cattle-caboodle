@@ -10,6 +10,8 @@ import { toast } from "sonner";
 const Expenses = () => {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [showDialog, setShowDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
@@ -82,6 +84,11 @@ const Expenses = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleExpenseClick = (expense: any) => {
+    setSelectedExpense(expense);
+    setShowDetailsDialog(true);
   };
 
   const categories = [
@@ -161,7 +168,11 @@ const Expenses = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {expenses.map((expense) => (
-          <Card key={expense.id} className="p-4">
+          <Card 
+            key={expense.id} 
+            className="p-4 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleExpenseClick(expense)}
+          >
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-medium">{expense.category}</h3>
@@ -175,6 +186,34 @@ const Expenses = () => {
           </Card>
         ))}
       </div>
+
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Expense Details</DialogTitle>
+          </DialogHeader>
+          {selectedExpense && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Category</label>
+                <p>{selectedExpense.category}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Description</label>
+                <p>{selectedExpense.description || 'No description'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Amount</label>
+                <p>₹{selectedExpense.amount}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Date</label>
+                <p>{new Date(selectedExpense.date).toLocaleDateString()}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

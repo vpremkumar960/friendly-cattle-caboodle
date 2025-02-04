@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Leaf, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState, useEffect } from "react";
 
 const Home = () => {
   const { data: expensesData } = useQuery({
@@ -92,6 +93,27 @@ const Home = () => {
   const previousMonthExpense = expensesByMonth?.[previousMonth] || 0;
   const expenseChange = lastMonthExpense - previousMonthExpense;
   const expenseChangePercentage = previousMonthExpense ? (expenseChange / previousMonthExpense) * 100 : 0;
+
+  // Add new weather data state
+  const [weather, setWeather] = useState<any>(null);
+
+  // Add weather data fetching
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        // Using a free weather API for demo
+        const response = await fetch(
+          `https://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=Chennai&aqi=no`
+        );
+        const data = await response.json();
+        setWeather(data);
+      } catch (error) {
+        console.error('Error fetching weather:', error);
+      }
+    };
+
+    fetchWeather();
+  }, []);
 
   return (
     <div className="p-6 space-y-6">
@@ -196,6 +218,25 @@ const Home = () => {
           </div>
         </Card>
       </div>
+
+      {/* Add Weather Card */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold mb-4">Local Weather</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-3xl font-bold">
+              {weather?.current?.temp_c}°C
+            </p>
+            <p className="text-gray-500">
+              {weather?.current?.condition?.text}
+            </p>
+          </div>
+          <div className="text-right">
+            <p>Humidity: {weather?.current?.humidity}%</p>
+            <p>Wind: {weather?.current?.wind_kph} km/h</p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

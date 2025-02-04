@@ -122,7 +122,8 @@ const Reminders = () => {
     }
   };
 
-  const handleDelete = async (reminderId: string) => {
+  const handleDelete = async (e: React.MouseEvent, reminderId: string) => {
+    e.stopPropagation(); // Prevent opening the dialog
     try {
       const { error } = await supabase
         .from('reminders')
@@ -244,7 +245,7 @@ const Reminders = () => {
                       size="icon" 
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(reminder.id);
+                        handleDelete(e, reminder.id);
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -273,7 +274,7 @@ const Reminders = () => {
                       <h3 className="font-medium">{reminder.title}</h3>
                       <p className="text-sm text-gray-500">{reminder.description}</p>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(reminder.id)}>
+                    <Button variant="ghost" size="icon" onClick={(e) => handleDelete(e, reminder.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
