@@ -1,52 +1,70 @@
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useIsMobile } from "@/hooks/use-mobile";
-import BreedingHistoryTable from "./breeding/BreedingHistoryTable";
-import BreedingHistoryTableMobile from "./breeding/BreedingHistoryTableMobile";
+import { Plus } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import BreedingRecordForm from "./breeding/BreedingRecordForm";
+import BreedingHistoryTableMobile from "./breeding/BreedingHistoryTableMobile";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 interface BreedingHistoryTabProps {
   cowId: string;
-  breedingHistory: any[];
-  onUpdate?: () => void;
 }
 
-const BreedingHistoryTab = ({ cowId, breedingHistory, onUpdate }: BreedingHistoryTabProps) => {
-  const [showAddBreedingDialog, setShowAddBreedingDialog] = useState(false);
-  const isMobile = useIsMobile();
+const BreedingHistoryTab = ({ cowId }: BreedingHistoryTabProps) => {
+  const [breedingRecords, setBreedingRecords] = useState<any[]>([]);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  useEffect(() => {
+    fetchBreedingRecords();
+  }, [cowId]);
+
+  const fetchBreedingRecords = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('breeding_records')
+        .select('*')
+        .eq('cow_id', cowId)
+        .order('insemination_date', { ascending: false });
+
+      if (error) throw error;
+      setBreedingRecords(data || []);
+    } catch (error) {
+      console.error('Error fetching breeding records:', error);
+      toast.error("Failed to fetch breeding records");
+    }
+  };
+
+  const handleRecordAdded = () => {
+    setShowAddDialog(false);
+    fetchBreedingRecords();
+    toast.success("Breeding record added successfully");
+  };
 
   return (
-    <Card className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-semibold">Breeding History</h3>
-        <Dialog open={showAddBreedingDialog} onOpenChange={setShowAddBreedingDialog}>
-          <DialogTrigger asChild>
-            <Button>Add Record</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Add Breeding Record</DialogTitle>
-            </DialogHeader>
-            <BreedingRecordForm
-              cowId={cowId}
-              onSuccess={() => {
-                if (onUpdate) onUpdate();
-                setShowAddBreedingDialog(false);
-              }}
-              onClose={() => setShowAddBreedingDialog(false)}
-            />
-          </DialogContent>
-        </Dialog>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Breeding History</h2>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Record
+        </Button>
       </div>
-      
-      {isMobile ? (
-        <BreedingHistoryTableMobile breedingHistory={breedingHistory} />
-      ) : (
-        <BreedingHistoryTable breedingHistory={breedingHistory} />
-      )}
-    </Card>
+
+      <BreedingHistoryTableMobile breedingRecords={breedingRecords} />
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <BreedingRecordForm
+            cowId={cowId}
+            onSuccess={handleRecordAdded}
+            onCancel={() => setShowAddDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

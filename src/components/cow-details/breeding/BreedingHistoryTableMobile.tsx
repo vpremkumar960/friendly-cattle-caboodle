@@ -1,47 +1,46 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface BreedingHistoryTableMobileProps {
-  breedingHistory: any[];
+  breedingRecords: any[];
 }
 
-const BreedingHistoryTableMobile = ({ breedingHistory }: BreedingHistoryTableMobileProps) => {
-  const formatDate = (date: string) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString();
-  };
-
+const BreedingHistoryTableMobile = ({ breedingRecords }: BreedingHistoryTableMobileProps) => {
   return (
-    <ScrollArea className="h-[400px] w-full rounded-md border">
+    <ScrollArea className="w-full">
       <div className="min-w-[600px]">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
-              <TableHead>Bull</TableHead>
+              <TableHead>Bull Semen</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Expected</TableHead>
-              <TableHead>Gender</TableHead>
-              <TableHead>Name</TableHead>
+              <TableHead>Expected Calving</TableHead>
+              <TableHead>Calving Date</TableHead>
+              <TableHead>Calf Details</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {breedingHistory.map((record: any) => (
+            {breedingRecords.map((record) => (
               <TableRow key={record.id}>
-                <TableCell>{formatDate(record.insemination_date)}</TableCell>
-                <TableCell>{record.bull_semen}</TableCell>
+                <TableCell>{new Date(record.insemination_date).toLocaleDateString()}</TableCell>
+                <TableCell>{record.bull_semen || 'N/A'}</TableCell>
+                <TableCell>{record.status}</TableCell>
                 <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-sm ${
-                    record.status === 'Success' ? 'bg-green-100 text-green-800' :
-                    record.status === 'Failed' ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {record.status}
-                  </span>
+                  {record.expected_calving_date 
+                    ? new Date(record.expected_calving_date).toLocaleDateString() 
+                    : 'N/A'}
                 </TableCell>
-                <TableCell>{formatDate(record.expected_calving_date)}</TableCell>
-                <TableCell>{record.calf_gender || '-'}</TableCell>
-                <TableCell>{record.calf_name || '-'}</TableCell>
+                <TableCell>
+                  {record.calving_date 
+                    ? new Date(record.calving_date).toLocaleDateString() 
+                    : 'N/A'}
+                </TableCell>
+                <TableCell>
+                  {record.calf_name 
+                    ? `${record.calf_name} (${record.calf_gender})` 
+                    : 'N/A'}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
