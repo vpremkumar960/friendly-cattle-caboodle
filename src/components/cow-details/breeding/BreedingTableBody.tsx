@@ -13,7 +13,7 @@ const BreedingTableBody = ({ records, onRecordClick }: BreedingTableBodyProps) =
         <BreedingTableRow 
           key={record.id} 
           record={record}
-          onClick={() => onRecordClick?.(record)}
+          onClick={onRecordClick ? () => onRecordClick(record) : undefined}
         />
       ))}
     </TableBody>

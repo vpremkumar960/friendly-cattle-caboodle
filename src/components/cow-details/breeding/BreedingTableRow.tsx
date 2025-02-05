@@ -2,16 +2,20 @@ import { TableCell, TableRow } from "@/components/ui/table";
 
 interface BreedingTableRowProps {
   record: any;
+  onClick?: () => void;
 }
 
-const BreedingTableRow = ({ record }: BreedingTableRowProps) => {
+const BreedingTableRow = ({ record, onClick }: BreedingTableRowProps) => {
   const formatDate = (date: string) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString();
   };
 
   return (
-    <TableRow>
+    <TableRow 
+      className={onClick ? "cursor-pointer hover:bg-gray-50" : ""}
+      onClick={onClick}
+    >
       <TableCell>{formatDate(record.insemination_date)}</TableCell>
       <TableCell>{record.bull_semen || 'N/A'}</TableCell>
       <TableCell>
