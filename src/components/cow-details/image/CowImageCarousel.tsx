@@ -8,9 +8,11 @@ interface CowImageCarouselProps {
   onEdit?: () => void;
 }
 
-const CowImageCarousel = ({ images, onEdit }: CowImageCarouselProps) => {
+const CowImageCarousel = ({ images = [], onEdit }: CowImageCarouselProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
+
+  const hasMultipleImages = images.length > 1;
 
   const navigateImage = (direction: 'prev' | 'next') => {
     if (direction === 'prev' && currentImageIndex > 0) {
@@ -19,8 +21,6 @@ const CowImageCarousel = ({ images, onEdit }: CowImageCarouselProps) => {
       setCurrentImageIndex(currentImageIndex + 1);
     }
   };
-
-  const hasMultipleImages = images.length > 1;
 
   if (!images.length) {
     return (
@@ -42,14 +42,12 @@ const CowImageCarousel = ({ images, onEdit }: CowImageCarouselProps) => {
 
   return (
     <div className="relative">
-      <div 
-        className="cursor-pointer relative group"
-        onClick={() => setShowImageModal(true)}
-      >
+      <div className="relative group">
         <img 
           src={images[currentImageIndex]} 
           alt="Cow" 
-          className="w-full h-64 object-cover rounded-lg"
+          className="w-full h-64 object-cover rounded-lg cursor-pointer"
+          onClick={() => setShowImageModal(true)}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder.svg';
