@@ -1,19 +1,30 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit } from "lucide-react";
 
 interface CowImageCarouselProps {
   images: string[];
+  onEdit?: () => void;
 }
 
-const CowImageCarousel = ({ images }: CowImageCarouselProps) => {
+const CowImageCarousel = ({ images, onEdit }: CowImageCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!images || images.length === 0) {
     return (
       <Card className="w-full h-64 flex items-center justify-center bg-gray-100">
         <p className="text-gray-500">No images available</p>
+        {onEdit && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2"
+            onClick={onEdit}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        )}
       </Card>
     );
   }
@@ -38,6 +49,16 @@ const CowImageCarousel = ({ images }: CowImageCarouselProps) => {
             target.src = '/placeholder.svg';
           }}
         />
+        {onEdit && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2"
+            onClick={onEdit}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        )}
       </Card>
       
       {images.length > 1 && (

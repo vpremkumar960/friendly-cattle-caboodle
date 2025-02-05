@@ -9,28 +9,7 @@ import MilkingTab from "./cow-details/MilkingTab";
 import BreedingHistoryTab from "./cow-details/BreedingHistoryTab";
 
 const CowDetails = ({ cowId, cowData, onUpdate }: { cowId: string; cowData: any; onUpdate?: () => void }) => {
-  const [breedingHistory, setBreedingHistory] = useState([]);
   const [images, setImages] = useState([cowData?.image_url || "/placeholder.svg"]);
-
-  useEffect(() => {
-    fetchBreedingHistory();
-  }, [cowId]);
-
-  const fetchBreedingHistory = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('breeding_records')
-        .select('*')
-        .eq('cow_id', cowId)
-        .order('insemination_date', { ascending: false });
-
-      if (error) throw error;
-      setBreedingHistory(data || []);
-    } catch (error) {
-      console.error('Error fetching breeding history:', error);
-      toast.error("Failed to fetch breeding history");
-    }
-  };
 
   return (
     <TooltipProvider>
@@ -73,11 +52,7 @@ const CowDetails = ({ cowId, cowData, onUpdate }: { cowId: string; cowData: any;
             <TabsContent value="breeding-history">
               <BreedingHistoryTab
                 cowId={cowId}
-                breedingHistory={breedingHistory}
-                onUpdate={() => {
-                  fetchBreedingHistory();
-                  if (onUpdate) onUpdate();
-                }}
+                onUpdate={onUpdate}
               />
             </TabsContent>
           </Tabs>

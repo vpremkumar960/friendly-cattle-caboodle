@@ -6,16 +6,17 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import BreedingRecordForm from "./breeding/BreedingRecordForm";
 import BreedingHistoryTableMobile from "./breeding/BreedingHistoryTableMobile";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BreedingHistoryTabProps {
   cowId: string;
+  onUpdate?: () => void;
 }
 
-const BreedingHistoryTab = ({ cowId }: BreedingHistoryTabProps) => {
+const BreedingHistoryTab = ({ cowId, onUpdate }: BreedingHistoryTabProps) => {
   const [breedingRecords, setBreedingRecords] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchBreedingRecords();
@@ -40,6 +41,7 @@ const BreedingHistoryTab = ({ cowId }: BreedingHistoryTabProps) => {
   const handleRecordAdded = () => {
     setShowAddDialog(false);
     fetchBreedingRecords();
+    if (onUpdate) onUpdate();
     toast.success("Breeding record added successfully");
   };
 
@@ -60,7 +62,7 @@ const BreedingHistoryTab = ({ cowId }: BreedingHistoryTabProps) => {
           <BreedingRecordForm
             cowId={cowId}
             onSuccess={handleRecordAdded}
-            onCancel={() => setShowAddDialog(false)}
+            onClose={() => setShowAddDialog(false)}
           />
         </DialogContent>
       </Dialog>
