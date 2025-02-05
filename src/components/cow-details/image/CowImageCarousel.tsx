@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
+import CarouselControls from "./CarouselControls";
 
 interface CowImageCarouselProps {
   images: string[];
@@ -10,16 +11,21 @@ interface CowImageCarouselProps {
 
 const CowImageCarousel = ({ images, onEdit }: CowImageCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [displayImages, setDisplayImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    setDisplayImages(images?.length > 0 ? images : ['/placeholder.svg']);
+  }, [images]);
 
   const handlePrevious = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : prev));
+    setCurrentIndex((prev) => (prev < displayImages.length - 1 ? prev + 1 : prev));
   };
 
-  if (!images || images.length === 0) {
+  if (!displayImages || displayImages.length === 0) {
     return (
       <Card className="relative w-full h-64 flex items-center justify-center bg-gray-100">
         <p className="text-gray-500">No images available</p>
@@ -41,8 +47,8 @@ const CowImageCarousel = ({ images, onEdit }: CowImageCarouselProps) => {
     <div className="relative">
       <Card className="relative w-full h-64 overflow-hidden">
         <img
-          src={images[currentIndex]}
-          alt={`Cow image ${currentIndex + 1}`}
+          src={displayImages[currentIndex]}
+          alt={`Image ${currentIndex + 1}`}
           className="w-full h-full object-cover transition-opacity duration-300"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
@@ -53,7 +59,7 @@ const CowImageCarousel = ({ images, onEdit }: CowImageCarouselProps) => {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 z-10"
+            className="absolute top-2 right-2 z-10 bg-white/80 hover:bg-white/90"
             onClick={onEdit}
           >
             <Edit className="h-4 w-4" />
@@ -61,42 +67,12 @@ const CowImageCarousel = ({ images, onEdit }: CowImageCarouselProps) => {
         )}
       </Card>
 
-      {images.length > 1 && (
-        <>
-          <Button
-            variant="secondary"
-            size="icon"
-            className={`absolute left-2 top-1/2 transform -translate-y-1/2 ${
-              currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            onClick={handlePrevious}
-            disabled={currentIndex === 0}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="secondary"
-            size="icon"
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 ${
-              currentIndex === images.length - 1 ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            onClick={handleNext}
-            disabled={currentIndex === images.length - 1}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
-            {images.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                  index === currentIndex ? 'bg-primary' : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-        </>
-      )}
+      <CarouselControls
+        currentIndex={currentIndex}
+        totalImages={displayImages.length}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+      />
     </div>
   );
 };

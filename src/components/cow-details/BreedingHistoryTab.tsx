@@ -6,7 +6,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import BreedingRecordForm from "./breeding/BreedingRecordForm";
 import BreedingHistoryTableMobile from "./breeding/BreedingHistoryTableMobile";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BreedingHistoryTabProps {
   cowId: string;
@@ -16,7 +15,6 @@ interface BreedingHistoryTabProps {
 const BreedingHistoryTab = ({ cowId, onUpdate }: BreedingHistoryTabProps) => {
   const [breedingRecords, setBreedingRecords] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchBreedingRecords();
