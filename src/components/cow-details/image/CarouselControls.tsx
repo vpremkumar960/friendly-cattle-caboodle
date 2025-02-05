@@ -8,38 +8,40 @@ interface CarouselControlsProps {
   onNext: () => void;
 }
 
-const CarouselControls = ({ 
-  currentIndex, 
-  totalImages, 
-  onPrevious, 
-  onNext 
+const CarouselControls = ({
+  currentIndex,
+  totalImages,
+  onPrevious,
+  onNext
 }: CarouselControlsProps) => {
   if (totalImages <= 1) return null;
 
   return (
     <>
-      <Button
-        variant="secondary"
-        size="icon"
-        className={`absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white/90 transition-opacity ${
-          currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : 'opacity-100'
-        }`}
-        onClick={onPrevious}
-        disabled={currentIndex === 0}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="secondary"
-        size="icon"
-        className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white/90 transition-opacity ${
-          currentIndex === totalImages - 1 ? 'opacity-50 cursor-not-allowed' : 'opacity-100'
-        }`}
-        onClick={onNext}
-        disabled={currentIndex === totalImages - 1}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
+      <div className="absolute inset-y-0 left-0 flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={onPrevious}
+          disabled={currentIndex === 0}
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+      </div>
+
+      <div className="absolute inset-y-0 right-0 flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={onNext}
+          disabled={currentIndex === totalImages - 1}
+        >
+          <ChevronRight className="h-6 w-6" />
+        </Button>
+      </div>
+
       <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
         {Array.from({ length: totalImages }).map((_, index) => (
           <div

@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import BreedingRecordForm from "./breeding/BreedingRecordForm";
-import BreedingHistoryTableMobile from "./breeding/BreedingHistoryTableMobile";
+import BreedingHistoryTable from "./breeding/BreedingHistoryTable";
 
 interface BreedingHistoryTabProps {
   cowId: string;
@@ -15,6 +15,7 @@ interface BreedingHistoryTabProps {
 const BreedingHistoryTab = ({ cowId, onUpdate }: BreedingHistoryTabProps) => {
   const [breedingRecords, setBreedingRecords] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
 
   useEffect(() => {
     fetchBreedingRecords();
@@ -43,6 +44,10 @@ const BreedingHistoryTab = ({ cowId, onUpdate }: BreedingHistoryTabProps) => {
     toast.success("Breeding record added successfully");
   };
 
+  const handleRecordClick = (record: any) => {
+    setSelectedRecord(record);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -53,7 +58,10 @@ const BreedingHistoryTab = ({ cowId, onUpdate }: BreedingHistoryTabProps) => {
         </Button>
       </div>
 
-      <BreedingHistoryTableMobile breedingRecords={breedingRecords} />
+      <BreedingHistoryTable
+        breedingRecords={breedingRecords}
+        onRecordClick={handleRecordClick}
+      />
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>

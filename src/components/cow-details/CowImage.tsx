@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import CowImageCarousel from "./image/CowImageCarousel";
+import ImageCarousel from "./image/ImageCarousel";
 
 interface CowImageProps {
   cowId: string;
@@ -15,14 +15,9 @@ const CowImage = ({ cowId, images = [], onUpdate }: CowImageProps) => {
   const [showImageEditDialog, setShowImageEditDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [displayImages, setDisplayImages] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (images && images.length > 0) {
-      setDisplayImages(images);
-    } else {
-      setDisplayImages(['/placeholder.svg']);
-    }
+    setDisplayImages(images?.length > 0 ? images : ['/placeholder.svg']);
   }, [images]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +70,7 @@ const CowImage = ({ cowId, images = [], onUpdate }: CowImageProps) => {
 
   return (
     <div>
-      <CowImageCarousel 
+      <ImageCarousel 
         images={displayImages}
         onEdit={() => setShowImageEditDialog(true)}
       />
@@ -84,18 +79,17 @@ const CowImage = ({ cowId, images = [], onUpdate }: CowImageProps) => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Upload Image</DialogTitle>
-            <DialogDescription>Choose an image file to upload for this cow.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <input
-              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
               className="hidden"
+              id="image-upload"
             />
             <Button 
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => document.getElementById('image-upload')?.click()}
               disabled={isUploading}
             >
               {isUploading ? "Uploading..." : "Select Image"}
