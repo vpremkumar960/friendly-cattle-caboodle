@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import CowAnimation from "@/components/animations/CowAnimation";
 const Records = () => {
   const [cows, setCows] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [viewMode, setViewMode<'grid' | 'list'>( 'grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedCow, setSelectedCow] = useState<any>(null);
   const navigate = useNavigate();
 
