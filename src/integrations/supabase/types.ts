@@ -61,6 +61,7 @@ export type Database = {
       }
       cows: {
         Row: {
+          additional_images: string[] | null
           breed: string | null
           created_at: string
           dam: string | null
@@ -77,6 +78,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          additional_images?: string[] | null
           breed?: string | null
           created_at?: string
           dam?: string | null
@@ -93,6 +95,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          additional_images?: string[] | null
           breed?: string | null
           created_at?: string
           dam?: string | null
