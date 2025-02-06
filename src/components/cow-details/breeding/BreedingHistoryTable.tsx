@@ -1,3 +1,4 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table } from "@/components/ui/table";
 import BreedingTableHeader from "./BreedingTableHeader";
@@ -12,7 +13,7 @@ const BreedingHistoryTable = ({ breedingRecords, onRecordClick }: BreedingHistor
   return (
     <div className="border rounded-lg overflow-hidden">
       <ScrollArea className="h-[400px]">
-        <div className="min-w-[600px] p-1">
+        <div className="min-w-[800px] w-full p-1">
           <Table>
             <BreedingTableHeader />
             <BreedingTableBody 

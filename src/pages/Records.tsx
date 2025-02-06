@@ -10,11 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import CowDetails from "@/components/CowDetails";
 import { differenceInMonths } from "date-fns";
 import { calculateAge } from "@/utils/dateUtils";
+import CowAnimation from "@/components/animations/CowAnimation";
 
 const Records = () => {
   const [cows, setCows] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode<'grid' | 'list'>( 'grid');
   const [selectedCow, setSelectedCow] = useState<any>(null);
   const navigate = useNavigate();
 
@@ -215,6 +216,10 @@ const Records = () => {
             Add Cow
           </Button>
         </div>
+      </div>
+
+      <div className="w-full overflow-hidden rounded-lg">
+        <CowAnimation />
       </div>
 
       {viewMode === 'grid' ? <GridView /> : <ListView />}
