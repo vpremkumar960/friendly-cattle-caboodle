@@ -1,13 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import AddBreedingRecord from "@/components/breeding/AddBreedingRecord";
-import BreedingTable from "@/components/breeding/BreedingTable";
+import StatusDialog from "@/components/breeding/StatusDialog";
+import CalvingDialog from "@/components/breeding/CalvingDialog";
+import BreedingRecordCard from "@/components/breeding/BreedingRecordCard";
 
 const Breeding = () => {
   const [breedingRecords, setBreedingRecords] = useState([]);
@@ -124,7 +122,8 @@ const Breeding = () => {
   };
 
   const handleRecordClick = (record: any) => {
-    if (record.status === 'Success' && record.calving_date && record.calf_gender && record.calf_name) {
+    const isComplete = record.status === 'Success' && record.calving_date && record.calf_gender && record.calf_name;
+    if (isComplete) {
       toast.info("This record is complete and cannot be modified");
       return;
     }
@@ -163,63 +162,35 @@ const Breeding = () => {
         />
       </div>
 
-      <BreedingTable
-        breedingRecords={breedingRecords}
-        onRecordClick={handleRecordClick}
-        onDeleteRecord={handleDeleteRecord}
+      <div className="space-y-4">
+        {breedingRecords.map((record: any) => (
+          <BreedingRecordCard
+            key={record.id}
+            record={record}
+            onClick={() => handleRecordClick(record)}
+            onDelete={handleDeleteRecord}
+            isComplete={
+              record.status === 'Success' && 
+              record.calving_date && 
+              record.calf_gender && 
+              record.calf_name
+            }
+          />
+        ))}
+      </div>
+
+      <StatusDialog
+        open={showStatusDialog}
+        onOpenChange={setShowStatusDialog}
+        onStatusUpdate={handleStatusUpdate}
       />
 
-      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Update Status</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Select onValueChange={handleStatusUpdate}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Success">Success</SelectItem>
-                <SelectItem value="Failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showCalvingDialog} onOpenChange={setShowCalvingDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Update Calving Details</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleCalvingUpdate} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Calving Date</label>
-              <Input type="date" name="calvingDate" required />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Calf Gender</label>
-              <Select name="calfGender">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Calf Name</label>
-              <Input name="calfName" placeholder="Enter calf name" required />
-            </div>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Updating..." : "Update"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <CalvingDialog
+        open={showCalvingDialog}
+        onOpenChange={setShowCalvingDialog}
+        onSubmit={handleCalvingUpdate}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 };
