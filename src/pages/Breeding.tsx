@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -104,7 +105,7 @@ const Breeding = () => {
           calving_date: calvingDate,
           calf_gender: calfGender,
           calf_name: calfName,
-          status: 'Success' // Only set to success when all details are provided
+          status: 'Success'
         })
         .eq('id', selectedRecord.id);
 
@@ -123,7 +124,6 @@ const Breeding = () => {
   };
 
   const handleRecordClick = (record: any) => {
-    // Only allow updates if the record is not complete (doesn't have all calving details)
     if (record.status === 'Success' && record.calving_date && record.calf_gender && record.calf_name) {
       toast.info("This record is complete and cannot be modified");
       return;
