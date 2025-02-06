@@ -34,7 +34,7 @@ const AddCow = () => {
 
       if (profileError) throw profileError;
 
-      // Prepare cow data with proper type conversion
+      // Prepare cow data
       const newCow: TablesInsert<"cows"> = {
         name: String(formData.get('name')),
         breed: formData.get('breed') ? String(formData.get('breed')) : null,
@@ -49,11 +49,50 @@ const AddCow = () => {
         user_id: profileData.id
       };
 
-      const { error } = await supabase
+      // Insert cow record
+      const { data: cowData, error: cowError } = await supabase
         .from('cows')
-        .insert(newCow);
+        .insert(newCow)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (cowError) throw cowError;
+
+      // Handle image uploads
+      if (selectedImages && selectedImages.length > 0) {
+        const imageUrls: string[] = [];
+
+        for (let i = 0; i < selectedImages.length; i++) {
+          const file = selectedImages[i];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${cowData.id}-${Date.now()}-${i}.${fileExt}`;
+
+          const { data: uploadData, error: uploadError } = await supabase
+            .storage
+            .from('cow-images')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase
+            .storage
+            .from('cow-images')
+            .getPublicUrl(fileName);
+
+          imageUrls.push(publicUrl);
+        }
+
+        // Update cow record with image URLs
+        const { error: updateError } = await supabase
+          .from('cows')
+          .update({ 
+            image_url: imageUrls[0],
+            additional_images: imageUrls.slice(1)
+          })
+          .eq('id', cowData.id);
+
+        if (updateError) throw updateError;
+      }
 
       toast.success("Cow added successfully!");
       navigate('/records');
