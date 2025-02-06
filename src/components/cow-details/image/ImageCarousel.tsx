@@ -74,7 +74,7 @@ const ImageCarousel = ({ images = [], onEdit }: ImageCarouselProps) => {
       )}
 
       {validImages.length > 1 && (
-        <div className="absolute inset-x-0 bottom-4 flex justify-between px-4">
+        <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-4">
           <Button
             variant="secondary"
             size="icon"
@@ -118,7 +118,7 @@ const ImageCarousel = ({ images = [], onEdit }: ImageCarouselProps) => {
               }}
             />
             {validImages.length > 1 && (
-              <div className="absolute inset-x-0 bottom-4 flex justify-between px-4">
+              <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-4">
                 <Button
                   variant="secondary"
                   size="icon"

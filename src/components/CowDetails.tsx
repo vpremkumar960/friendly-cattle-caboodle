@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +10,17 @@ import MilkingTab from "./cow-details/MilkingTab";
 import BreedingHistoryTab from "./cow-details/BreedingHistoryTab";
 
 const CowDetails = ({ cowId, cowData, onUpdate }: { cowId: string; cowData: any; onUpdate?: () => void }) => {
-  const [images, setImages] = useState([cowData?.image_url || "/placeholder.svg"]);
+  const [images, setImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Combine main image and additional images
+    const allImages = [
+      cowData?.image_url,
+      ...(cowData?.additional_images || [])
+    ].filter(Boolean);
+    
+    setImages(allImages.length > 0 ? allImages : ["/placeholder.svg"]);
+  }, [cowData]);
 
   return (
     <TooltipProvider>
@@ -25,7 +36,7 @@ const CowDetails = ({ cowId, cowData, onUpdate }: { cowId: string; cowData: any;
         
         <div className="w-full md:w-3/4">
           <Tabs defaultValue="health" className="w-full">
-            <TabsList>
+            <TabsList className="w-full">
               <TabsTrigger value="health">Health</TabsTrigger>
               <TabsTrigger value="milking">Milking</TabsTrigger>
               <TabsTrigger value="breeding-history">Breeding History</TabsTrigger>
@@ -49,7 +60,7 @@ const CowDetails = ({ cowId, cowData, onUpdate }: { cowId: string; cowData: any;
               />
             </TabsContent>
 
-            <TabsContent value="breeding-history">
+            <TabsContent value="breeding-history" className="overflow-x-auto">
               <BreedingHistoryTab
                 cowId={cowId}
                 onUpdate={onUpdate}
